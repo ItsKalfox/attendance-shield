@@ -151,6 +151,15 @@ public class SessionService {
     }
 
     @Transactional
+    public SessionResponse endSession(Long sessionId) {
+        AttendanceSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+        session.setStatus(SessionStatus.ENDED);
+        session = sessionRepository.save(session);
+        return convertToResponse(session);
+    }
+
+    @Transactional
     public void deleteSession(Long sessionId) {
         if (!sessionRepository.existsById(sessionId)) {
             throw new ResourceNotFoundException("Session not found");

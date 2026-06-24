@@ -203,8 +203,12 @@
                             <option value="LOGIN_FAILED">Login Failed</option>
                             <option value="ATTENDANCE_SUBMITTED">Check-in Submitted</option>
                         </select>
-                        <button class="btn btn-secondary" onclick="loadAuditLogs()"
-                            style="padding: 0.25rem 0.5rem; font-size: 0.75rem; height: 1.85rem;">Refresh</button>
+                        <button class="btn btn-secondary" onclick="refreshAuditLogs(this)" title="Refresh Logs"
+                            style="padding: 0.25rem; width: 1.85rem; height: 1.85rem; display: flex; align-items: center; justify-content: center;">
+                            <svg class="refresh-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <div id="console-box" class="console-logs">
@@ -239,8 +243,12 @@
                                 style="padding:0.25rem 0.75rem;font-size:0.8rem;height:1.85rem;">
                                 + Add Student
                             </button>
-                            <button class="btn btn-secondary" onclick="loadStudents()"
-                                style="padding:0.25rem 0.5rem;font-size:0.8rem;height:1.85rem;">Refresh</button>
+                            <button class="btn btn-secondary" onclick="refreshStudents(this)" title="Refresh Students"
+                                style="padding: 0.25rem; width: 1.85rem; height: 1.85rem; display: flex; align-items: center; justify-content: center;">
+                                <svg class="refresh-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div id="student-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding-top:1rem;">
@@ -261,8 +269,12 @@
                                 style="padding:0.25rem 0.75rem;font-size:0.8rem;height:1.85rem;">
                                 + Add Lecturer
                             </button>
-                            <button class="btn btn-secondary" onclick="loadLecturers()"
-                                style="padding:0.25rem 0.5rem;font-size:0.8rem;height:1.85rem;">Refresh</button>
+                            <button class="btn btn-secondary" onclick="refreshLecturers(this)" title="Refresh Lecturers"
+                                style="padding: 0.25rem; width: 1.85rem; height: 1.85rem; display: flex; align-items: center; justify-content: center;">
+                                <svg class="refresh-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div id="lecturer-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding-top:1rem;">
@@ -294,9 +306,17 @@
                     Print QR PDF Sheet
                 </button>
 
+                <!-- Step 1: Delete trigger button -->
                 <button class="btn btn-danger" id="btn-modal-end" style="width: 100%; margin-top: 0.5rem;">
-                    End Session (Deactivate QR)
+                    Delete Session
                 </button>
+
+                <!-- Step 2: Inline confirmation row (hidden by default) -->
+                <div id="end-session-confirm-row" class="hidden" style="margin-top:0.5rem; display:flex; gap:0.5rem; align-items:center; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:0.5rem; padding:0.6rem 0.75rem;">
+                    <span style="flex:1; font-size:0.8rem; color:var(--text-secondary);">Delete this session? All attendance records will be permanently removed.</span>
+                    <button id="btn-end-confirm-yes" class="btn btn-danger" style="padding:0.3rem 0.75rem; font-size:0.78rem; flex-shrink:0;">Yes, Delete</button>
+                    <button id="btn-end-confirm-cancel" class="btn btn-secondary" style="padding:0.3rem 0.75rem; font-size:0.78rem; flex-shrink:0;" onclick="cancelEndSession()">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
@@ -464,10 +484,6 @@
             <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1.5rem;">A secure password will be generated and emailed to the lecturer.</p>
             <form id="add-lecturer-form">
                 <div class="form-group">
-                    <label for="add-lecturer-id">Lecturer ID</label>
-                    <input type="text" id="add-lecturer-id" class="form-input" placeholder="e.g. L001" required>
-                </div>
-                <div class="form-group">
                     <label for="add-lecturer-name">Full Name</label>
                     <input type="text" id="add-lecturer-name" class="form-input" placeholder="e.g. Dr. Jane Smith" required>
                 </div>
@@ -491,10 +507,6 @@
             <div id="lecturer-view-mode">
                 <div style="display:grid;gap:0.75rem;margin-bottom:1.5rem;">
                     <div style="background:rgba(15,23,42,0.5);padding:0.75rem;border-radius:0.5rem;border:1px solid var(--border-color);">
-                        <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.15rem;">Lecturer ID</div>
-                        <div id="view-lecturer-id" style="font-weight:600;"></div>
-                    </div>
-                    <div style="background:rgba(15,23,42,0.5);padding:0.75rem;border-radius:0.5rem;border:1px solid var(--border-color);">
                         <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.15rem;">Full Name</div>
                         <div id="view-lecturer-name" style="font-weight:600;"></div>
                     </div>
@@ -516,10 +528,6 @@
             <div id="lecturer-edit-mode" class="hidden">
                 <form id="edit-lecturer-form">
                     <div class="form-group">
-                        <label for="edit-lecturer-id">Lecturer ID</label>
-                        <input type="text" id="edit-lecturer-id" class="form-input" required>
-                    </div>
-                    <div class="form-group">
                         <label for="edit-lecturer-name">Full Name</label>
                         <input type="text" id="edit-lecturer-name" class="form-input" required>
                     </div>
@@ -538,7 +546,7 @@
     </div>
 
     <!-- Main JS Link -->
-    <script src="/script/script.js"></script>
+    <script src="/script/script.js?v=3"></script>
 </body>
 
 </html>

@@ -42,6 +42,9 @@ public class AuthenticationService {
         AttendanceSession session = null;
         if (request.getQrToken() != null && !request.getQrToken().isEmpty()) {
             session = sessionRepository.findByQrToken(request.getQrToken()).orElse(null);
+            if (session == null) {
+                throw new UnauthorizedException("This QR code is invalid or no longer exists. The session may have been deleted by the lecturer.");
+            }
         }
 
         // Log attempt first (nullable user/session)

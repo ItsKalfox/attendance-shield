@@ -68,6 +68,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/session/create").hasAnyRole("LECTURER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/session/all").hasAnyRole("LECTURER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/session/{id}").hasAnyRole("LECTURER", "ADMIN", "STUDENT")
+                .requestMatchers(HttpMethod.PATCH, "/api/session/{id}/end").hasAnyRole("LECTURER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/session/{id}").hasAnyRole("LECTURER", "ADMIN")
                 
                 // Attendance API mappings

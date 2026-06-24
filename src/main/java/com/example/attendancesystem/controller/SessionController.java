@@ -65,6 +65,18 @@ public class SessionController {
         return ResponseEntity.ok(sessions);
     }
 
+    @PatchMapping("/{id}/end")
+    public ResponseEntity<SessionResponse> endSession(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        SessionResponse response = sessionService.getSessionDetails(id);
+        if (principal.getRole() == Role.LECTURER && !response.getLecturerId().equals(principal.getUserId())) {
+            throw new AccessDeniedException("You do not have permission to end this session");
+        }
+        SessionResponse ended = sessionService.endSession(id);
+        return ResponseEntity.ok(ended);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSession(
             @PathVariable Long id,

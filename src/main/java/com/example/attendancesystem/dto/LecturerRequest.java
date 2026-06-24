@@ -7,9 +7,6 @@ import lombok.Data;
 @Data
 public class LecturerRequest {
 
-    @NotBlank(message = "Lecturer ID is required")
-    private String lecturerId;
-
     @NotBlank(message = "Full name is required")
     private String fullName;
 

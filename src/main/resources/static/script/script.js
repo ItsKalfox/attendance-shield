@@ -398,6 +398,12 @@ if (createSessionForm) {
             radiusMeters: allowOutside ? null : parseFloat(document.getElementById("session-radius").value)
         };
 
+        const btn = createSessionForm.querySelector("button[type='submit']");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
+        }
+
         try {
             const res = await fetch(`${BASE_URL}/api/session/create`, {
                 method: "POST",
@@ -417,6 +423,11 @@ if (createSessionForm) {
 
         } catch (err) {
             showToast(err.message, "error");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = "Generate Attendance QR";
+            }
         }
     });
 }
@@ -534,27 +545,55 @@ function openQrModal(session) {
     const printBtn = document.getElementById("btn-modal-print");
     if (printBtn) printBtn.onclick = () => printQrPDF(session);
 
-    // End session button inside modal
+    // End session button inside modal — Step 1: show confirm row
     const endBtn = document.getElementById("btn-modal-end");
-    if (endBtn) {
-        endBtn.onclick = async () => {
-            if (confirm("End session? Student check-ins will stop.")) {
-                try {
-                    const res = await fetch(`${BASE_URL}/api/session/${session.sessionId}`, {
-                        method: "DELETE",
-                        headers: getHeaders()
-                    });
+    const confirmRow = document.getElementById("end-session-confirm-row");
+    const confirmYes = document.getElementById("btn-end-confirm-yes");
 
-                    if (res.ok) {
-                        showToast("Session ended", "success");
-                        closeQrModal();
-                        loadSessions();
-                    } else {
-                        throw new Error("Failed to delete session");
-                    }
-                } catch (e) {
-                    showToast(e.message, "error");
+    if (endBtn) {
+        endBtn.disabled = false;
+        endBtn.innerHTML = "Delete Session";
+
+        // Reset state each time modal is opened
+        if (confirmRow) confirmRow.classList.add("hidden");
+
+        endBtn.onclick = () => {
+            // Show inline confirmation row, hide main button
+            endBtn.classList.add("hidden");
+            if (confirmRow) confirmRow.classList.remove("hidden");
+        };
+    }
+
+    // Step 2: "Yes, End" actually ends the session
+    if (confirmYes) {
+        // Remove any old listener by cloning
+        const newYes = confirmYes.cloneNode(true);
+        confirmYes.parentNode.replaceChild(newYes, confirmYes);
+
+        newYes.onclick = async () => {
+            newYes.disabled = true;
+            newYes.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
+            try {
+                const res = await fetch(`${BASE_URL}/api/session/${session.sessionId}`, {
+                    method: "DELETE",
+                    headers: getHeaders()
+                });
+
+                if (res.ok) {
+                    showToast("Session deleted successfully", "success");
+                    closeQrModal();
+                    loadSessions();
+                } else {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.message || `Failed to delete session (HTTP ${res.status})`);
                 }
+            } catch (e) {
+                showToast(e.message, "error");
+                // Reset UI on error
+                newYes.disabled = false;
+                newYes.innerHTML = "Yes, Delete";
+                if (confirmRow) confirmRow.classList.add("hidden");
+                if (endBtn) endBtn.classList.remove("hidden");
             }
         };
     }
@@ -563,10 +602,23 @@ function openQrModal(session) {
     if (qrModal) qrModal.classList.remove("hidden");
 }
 
+function cancelEndSession() {
+    const endBtn = document.getElementById("btn-modal-end");
+    const confirmRow = document.getElementById("end-session-confirm-row");
+    if (endBtn) endBtn.classList.remove("hidden");
+    if (confirmRow) confirmRow.classList.add("hidden");
+}
+
 function closeQrModal() {
     const qrModal = document.getElementById("qr-modal");
     if (qrModal) qrModal.classList.add("hidden");
+    // Reset End Session confirm state
+    const endBtn = document.getElementById("btn-modal-end");
+    const confirmRow = document.getElementById("end-session-confirm-row");
+    if (endBtn) endBtn.classList.remove("hidden");
+    if (confirmRow) confirmRow.classList.add("hidden");
 }
+
 
 // Print PDF helper using browser printing window
 function printQrPDF(session) {
@@ -1124,7 +1176,6 @@ function renderLecturerCards(lecturers) {
                 </div>
                 <div style="overflow:hidden;">
                     <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.fullName}</div>
-                    <div style="font-size:0.75rem;color:var(--text-secondary);font-family:monospace;">${l.lecturerId || "—"}</div>
                 </div>
             </div>`;
         grid.appendChild(card);
@@ -1137,8 +1188,7 @@ function filterLecturerCards() {
     const q = searchEl.value.toLowerCase().trim();
     const filtered = q
         ? allLecturers.filter(l =>
-            (l.fullName || "").toLowerCase().includes(q) ||
-            (l.lecturerId || "").toLowerCase().includes(q))
+            (l.fullName || "").toLowerCase().includes(q))
         : allLecturers;
     renderLecturerCards(filtered);
 }
@@ -1173,7 +1223,6 @@ if (addLecturerForm) {
         }
 
         const payload = {
-            lecturerId: document.getElementById("add-lecturer-id").value.trim(),
             fullName:  document.getElementById("add-lecturer-name").value.trim(),
             email:     document.getElementById("add-lecturer-email").value.trim()
         };
@@ -1207,13 +1256,10 @@ if (addLecturerForm) {
     });
 }
 
-// ── Lecturer Detail Modal ──
 function openLecturerDetailModal(lecturer) {
     selectedLecturer = lecturer;
     const heading = document.getElementById("detail-lecturer-heading");
     if (heading) heading.textContent = lecturer.fullName;
-    const idEl = document.getElementById("view-lecturer-id");
-    if (idEl) idEl.textContent = lecturer.lecturerId || "—";
     const nameEl = document.getElementById("view-lecturer-name");
     if (nameEl) nameEl.textContent = lecturer.fullName;
     const emailEl = document.getElementById("view-lecturer-email");
@@ -1234,8 +1280,6 @@ function closeLecturerDetailModal() {
 }
 
 function enterLecturerEditMode() {
-    const idInput = document.getElementById("edit-lecturer-id");
-    if (idInput) idInput.value = selectedLecturer.lecturerId || "";
     const nameInput = document.getElementById("edit-lecturer-name");
     if (nameInput) nameInput.value = selectedLecturer.fullName;
     const emailInput = document.getElementById("edit-lecturer-email");
@@ -1264,7 +1308,6 @@ if (editLecturerForm) {
         if (errorBox) errorBox.classList.add("hidden");
 
         const payload = {
-            lecturerId: document.getElementById("edit-lecturer-id").value.trim(),
             fullName:  document.getElementById("edit-lecturer-name").value.trim(),
             email:     document.getElementById("edit-lecturer-email").value.trim()
         };
@@ -1338,6 +1381,57 @@ async function resetLecturerPassword() {
             btn.disabled = false;
             btn.textContent = "🔑 Reset Password";
         }
+    }
+}
+
+async function refreshAuditLogs(btn) {
+    if (!btn) return;
+    const icon = btn.querySelector(".refresh-icon");
+    if (icon) icon.classList.add("spinning");
+    btn.disabled = true;
+
+    try {
+        await loadAuditLogs();
+        showToast("Audit logs refreshed", "success");
+    } catch (e) {
+        showToast("Failed to refresh logs", "error");
+    } finally {
+        if (icon) icon.classList.remove("spinning");
+        btn.disabled = false;
+    }
+}
+
+async function refreshStudents(btn) {
+    if (!btn) return;
+    const icon = btn.querySelector(".refresh-icon");
+    if (icon) icon.classList.add("spinning");
+    btn.disabled = true;
+
+    try {
+        await loadStudents();
+        showToast("Students list refreshed", "success");
+    } catch (e) {
+        showToast("Failed to refresh students", "error");
+    } finally {
+        if (icon) icon.classList.remove("spinning");
+        btn.disabled = false;
+    }
+}
+
+async function refreshLecturers(btn) {
+    if (!btn) return;
+    const icon = btn.querySelector(".refresh-icon");
+    if (icon) icon.classList.add("spinning");
+    btn.disabled = true;
+
+    try {
+        await loadLecturers();
+        showToast("Lecturers list refreshed", "success");
+    } catch (e) {
+        showToast("Failed to refresh lecturers", "error");
+    } finally {
+        if (icon) icon.classList.remove("spinning");
+        btn.disabled = false;
     }
 }
 

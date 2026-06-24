@@ -853,4 +853,19 @@ input[type="datetime-local"] {
     box-shadow: none !important;
 }
 
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.refresh-icon {
+    display: inline-block;
+    transform-origin: center;
+}
+
+.refresh-icon.spinning {
+    animation: spin 1s linear infinite;
+}
+
+
 

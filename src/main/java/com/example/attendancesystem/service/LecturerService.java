@@ -60,20 +60,20 @@ public class LecturerService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("A user with this email already exists");
         }
-        if (userRepository.findByStudentId(request.getLecturerId()).isPresent()) {
-            throw new BadRequestException("A lecturer with this Lecturer ID already exists");
-        }
 
         String rawPassword = generatePassword();
 
         User user = new User();
-        user.setStudentId(request.getLecturerId()); // map to studentId field
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setRole(Role.LECTURER);
         user.setCreatedAt(LocalDateTime.now());
 
+        user = userRepository.save(user);
+
+        // Auto-generate studentId based on auto-incremented userId
+        user.setStudentId("L" + user.getUserId());
         user = userRepository.save(user);
 
         emailService.sendLecturerWelcomeEmail(user.getEmail(), user.getFullName(), user.getStudentId(), rawPassword);
@@ -96,15 +96,8 @@ public class LecturerService {
             }
         });
 
-        userRepository.findByStudentId(request.getLecturerId()).ifPresent(existing -> {
-            if (!existing.getUserId().equals(userId)) {
-                throw new BadRequestException("Lecturer ID is already used by another lecturer");
-            }
-        });
-
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-        user.setStudentId(request.getLecturerId());
 
         return toResponse(userRepository.save(user));
     }
