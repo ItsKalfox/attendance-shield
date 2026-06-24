@@ -60,8 +60,8 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/attendance.html", "/favicon.ico", "/*.js", "/*.css", "/*.html").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers("/", "/index.html", "/attendance.html", "/favicon.ico", "/*.js", "/*.css", "/*.html", "/css/**", "/script/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/forgot-password/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/session/qr/**").permitAll() // QR entry verification
                 
                 // Session API mappings

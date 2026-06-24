@@ -82,4 +82,37 @@ public class EmailService {
                "<p style='font-size:0.8rem;color:#9ca3af;'>If you did not request this reset, please contact your administrator immediately.</p>" +
                "</div></body></html>";
     }
+
+    public void sendOtpEmail(String toEmail, String otp) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("pas.verify.support@gmail.com");
+            helper.setTo(toEmail);
+            helper.setSubject("Attendance Shield — Password Reset OTP");
+            helper.setText(buildOtpHtml(toEmail, otp), true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            System.err.println("[EmailService] Failed to send OTP email to " + toEmail + ": " + e.getMessage());
+            throw new RuntimeException("Failed to send OTP email: " + e.getMessage(), e);
+        }
+    }
+
+    private String buildOtpHtml(String email, String otp) {
+        return "<!DOCTYPE html><html><body style='font-family:Inter,Arial,sans-serif;background:#0b0f19;color:#f3f4f6;padding:2rem;'>" +
+               "<div style='max-width:520px;margin:auto;background:rgba(20,26,46,0.95);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:2rem;'>" +
+               "<h1 style='font-size:1.5rem;margin-bottom:0.25rem;background:linear-gradient(135deg,#fff 30%,#a5b4fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;'>Attendance Shield</h1>" +
+               "<p style='color:#9ca3af;font-size:0.85rem;margin-bottom:2rem;'>One-Time Password (OTP)</p>" +
+               "<p style='margin-bottom:1rem;'>Hello,</p>" +
+               "<p style='color:#9ca3af;margin-bottom:1.5rem;'>You requested a password reset. Use the OTP code below to verify your request:</p>" +
+               "<div style='background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;padding:1.5rem;margin-bottom:1.5rem;text-align:center;'>" +
+               "<span style='color:#9ca3af;font-size:0.85rem;display:block;margin-bottom:0.5rem;'>Your OTP Code</span>" +
+               "<strong style='font-size:2.25rem;font-family:monospace;color:#3b82f6;letter-spacing:4px;'>" + otp + "</strong>" +
+               "</div>" +
+               "<p style='font-size:0.8rem;color:#9ca3af;'>This code will expire in 5 minutes. If you did not make this request, please ignore this email.</p>" +
+               "</div></body></html>";
+    }
 }
+

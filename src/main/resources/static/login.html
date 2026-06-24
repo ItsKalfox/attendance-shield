@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Attendance Shield - Instructor Portal Sign In</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+
+<body>
+
+    <!-- LOGIN CARD -->
+    <div id="auth-card" class="card auth-container">
+        <!-- Centered Branding Header -->
+        <div style="text-align: center; margin-bottom: 2.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="var(--color-primary)" style="filter: drop-shadow(0 0 6px var(--color-primary-glow)); margin-bottom: 0.25rem;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <h1 style="font-family: var(--font-outfit); font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.2; text-align: center;">Attendance Shield</h1>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; font-weight: 500; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Instructor Portal</p>
+        </div>
+
+        <!-- Left-Aligned Sign-In Header -->
+        <div style="text-align: left; margin-bottom: 1.5rem; width: 100%;">
+            <h2 style="font-family: var(--font-outfit); font-size: 1.2rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.25rem 0;">Sign In</h2>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">Access lecturer dashboard</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="login-email">Email Address</label>
+                <input type="email" id="login-email" class="form-input" placeholder="example@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+            </div>
+
+            <div id="login-error-msg" class="hidden"></div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">Sign In</button>
+        </form>
+
+        <!-- Having trouble logging in? Forgot Password link -->
+        <div style="text-align: center; margin-top: 1.75rem; font-size: 0.8rem; line-height: 1.45;">
+            <span style="color: var(--text-secondary);">Having trouble logging in?</span><br>
+            <a href="/forgot-password.html" style="color: var(--color-primary); text-decoration: none; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#60a5fa'" onmouseout="this.style.color='var(--color-primary)'">Forgot Password</a>
+        </div>
+    </div>
+
+    <!-- JS Link -->
+    <script src="/script/login.js"></script>
+</body>
+
+</html>

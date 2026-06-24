@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Attendance Shield - Reset Success</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+
+<body>
+
+    <!-- SUCCESS CARD -->
+    <div id="auth-card" class="card auth-container">
+        <!-- Centered Branding Header -->
+        <div style="text-align: center; margin-bottom: 2.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="var(--color-primary)" style="filter: drop-shadow(0 0 6px var(--color-primary-glow)); margin-bottom: 0.25rem;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <h1 style="font-family: var(--font-outfit); font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; line-height: 1.2; text-align: center;">Attendance Shield</h1>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0; font-weight: 500; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Instructor Portal</p>
+        </div>
+
+        <!-- Centered Success Display -->
+        <div style="text-align: center; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+            <!-- Green checkmark icon -->
+            <div style="width: 3.5rem; height: 3.5rem; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.3));">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="#10b981">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+            </div>
+            
+            <h2 style="font-family: var(--font-outfit); font-size: 1.25rem; font-weight: 600; color: var(--text-primary); margin: 0;">Password Reset Successfully</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0; line-height: 1.45;">Your login credentials have been updated. You can now use your new password to sign in.</p>
+        </div>
+
+        <!-- Back to Login Link Button -->
+        <div style="margin-top: 1.75rem; width: 100%;">
+            <a href="/login.html" class="btn btn-primary" style="width: 100%; text-decoration: none;">Back to Login</a>
+        </div>
+    </div>
+
+</body>
+
+</html>
