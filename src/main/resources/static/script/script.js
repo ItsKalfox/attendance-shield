@@ -312,9 +312,58 @@ function recalibrateLecturerLocation() {
 function toggleGeofenceFields(enabled) {
     const fields = document.getElementById("geofence-fields");
     if (!fields) return;
+
     if (enabled) {
         fields.classList.remove("hidden");
-        initLecturerMap();
+
+        // Show the fields immediately, then acquire GPS before rendering the map
+        const gpsBtn = document.getElementById("btn-lecturer-gps");
+        if (gpsBtn) {
+            gpsBtn.disabled = true;
+            gpsBtn.textContent = "Locating...";
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Update coordinates with fresh GPS fix
+                    lecturerCurrentLat = position.coords.latitude;
+                    lecturerCurrentLng = position.coords.longitude;
+                    selectedLat = lecturerCurrentLat;
+                    selectedLng = lecturerCurrentLng;
+
+                    // Re-enable button
+                    if (gpsBtn) {
+                        gpsBtn.disabled = false;
+                        gpsBtn.textContent = "Recalibrate GPS Location";
+                    }
+
+                    // Init or reposition map at the real location
+                    initLecturerMap();
+                },
+                (error) => {
+                    // Geolocation failed — still show map at last known/default position
+                    if (gpsBtn) {
+                        gpsBtn.disabled = false;
+                        gpsBtn.textContent = "Recalibrate GPS Location";
+                    }
+                    const msg = error.code === 1
+                        ? "Location permission denied. Map shown at default position."
+                        : "Could not get location. Map shown at default position.";
+                    showToast(msg, "error");
+                    initLecturerMap();
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            // No geolocation support
+            if (gpsBtn) {
+                gpsBtn.disabled = false;
+                gpsBtn.textContent = "Recalibrate GPS Location";
+            }
+            showToast("Geolocation is not supported by this browser.", "error");
+            initLecturerMap();
+        }
     } else {
         fields.classList.add("hidden");
     }
