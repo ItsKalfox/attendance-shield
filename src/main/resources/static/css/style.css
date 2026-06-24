@@ -974,4 +974,64 @@ input[type="datetime-local"] {
     background: #059669;
 }
 
+/* ─── Radius Range Slider ───────────────────────────────────────── */
 
+.radius-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    cursor: pointer;
+    margin-top: 0.6rem;
+    border: none;
+    padding: 0;
+    accent-color: var(--color-primary);
+}
+
+.radius-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: box-shadow 0.2s, transform 0.15s;
+    border: 2px solid #fff;
+}
+
+.radius-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.35), 0 2px 8px rgba(0, 0, 0, 0.5);
+    transform: scale(1.1);
+}
+
+.radius-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 9999px;
+}
+
+.radius-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    border: 2px solid #fff;
+}
+
+.radius-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.radius-slider::-moz-range-progress {
+    background: var(--color-primary);
+    height: 6px;
+    border-radius: 9999px;
+}

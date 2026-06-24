@@ -653,12 +653,15 @@ async function openDetailModal(session) {
     const detailTopic = document.getElementById("modal-detail-topic");
     if (detailTopic) detailTopic.textContent = `Topic: ${session.lectureTopic}`;
 
-    // Add listener to flag checkbox
+    // Reset all settings to default on each open
+    const highFlagCheckbox = document.getElementById("checkbox-allow-high-flag");
+    if (highFlagCheckbox) highFlagCheckbox.checked = false;
     const flagCheckbox = document.getElementById("checkbox-show-low-med");
-    if (flagCheckbox) {
-        flagCheckbox.checked = false;
-        flagCheckbox.onclick = () => renderAttendeeList();
-    }
+    if (flagCheckbox) flagCheckbox.checked = false;
+    const settingsPanel = document.getElementById("detail-settings-panel");
+    if (settingsPanel) settingsPanel.classList.add("hidden");
+    const settingsBtn = document.getElementById("btn-detail-settings");
+    if (settingsBtn) settingsBtn.style.color = '';
 
     await loadSessionRecords(session.sessionId);
     const detailModal = document.getElementById("detail-modal");
@@ -693,7 +696,11 @@ async function loadSessionRecords(sessionId) {
 
 function renderDetailChart() {
     const expected = currentDetailSession.expectedStudents || 1;
-    const attended = currentSessionRecords.filter(r => r.status === 'PRESENT' || r.status === 'LATE').length;
+    const allowHighFlag = document.getElementById("checkbox-allow-high-flag")?.checked;
+    const attended = currentSessionRecords.filter(r => {
+        if (!allowHighFlag && r.flagLevel === 'HIGH') return false;
+        return r.status === 'PRESENT' || r.status === 'LATE';
+    }).length;
 
     const attendedEl = document.getElementById("attended-count");
     if (attendedEl) attendedEl.textContent = attended;
@@ -704,8 +711,7 @@ function renderDetailChart() {
     const percentEl = document.getElementById("attendance-percent");
     if (percentEl) percentEl.textContent = `${percent}%`;
 
-    // SVG circle dashoffset
-    // Circumference of circle r=55 is 2 * PI * 55 = 345.5
+    // SVG circle dashoffset — circumference of circle r=55 is 2 * PI * 55 = 345.5
     const offset = 345.5 - (345.5 * percent) / 100;
     const circle = document.getElementById("attendance-chart");
     if (circle) circle.style.strokeDashoffset = offset;
@@ -716,15 +722,22 @@ function renderAttendeeList() {
     if (!container) return;
     container.innerHTML = "";
 
-    if (currentSessionRecords.length === 0) {
+    const allowHighFlag = document.getElementById("checkbox-allow-high-flag")?.checked;
+    const flagCheckbox = document.getElementById("checkbox-show-low-med");
+    const showLowMed = flagCheckbox ? flagCheckbox.checked : false;
+
+    // Filter records: exclude HIGH flag unless explicitly allowed
+    const visibleRecords = currentSessionRecords.filter(r => {
+        if (!allowHighFlag && r.flagLevel === 'HIGH') return false;
+        return true;
+    });
+
+    if (visibleRecords.length === 0) {
         container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding: 1rem 0;">No attendees recorded.</p>`;
         return;
     }
 
-    const flagCheckbox = document.getElementById("checkbox-show-low-med");
-    const showLowMed = flagCheckbox ? flagCheckbox.checked : false;
-
-    currentSessionRecords.forEach(r => {
+    visibleRecords.forEach(r => {
         // Determine if we show flag icon
         let showFlag = false;
         if (r.flagLevel === 'HIGH') {
@@ -759,6 +772,205 @@ function toggleFlagReason(iconElement) {
     if (reasonBox) {
         reasonBox.classList.toggle("hidden");
     }
+}
+
+function toggleDetailSettings() {
+    const panel = document.getElementById("detail-settings-panel");
+    const btn   = document.getElementById("btn-detail-settings");
+    if (!panel) return;
+    const isHidden = panel.classList.toggle("hidden");
+    // Highlight gear icon when panel is open
+    if (btn) btn.style.color = isHidden ? '' : 'var(--color-primary)';
+}
+
+function exportAttendancePDF() {
+    if (!currentDetailSession) return;
+
+    const allowHighFlag = document.getElementById("checkbox-allow-high-flag")?.checked;
+    const records = currentSessionRecords.filter(r => {
+        if (!allowHighFlag && r.flagLevel === 'HIGH') return false;
+        return r.status === 'PRESENT' || r.status === 'LATE';
+    });
+
+    const session = currentDetailSession;
+    const now = new Date().toLocaleString();
+
+    const tableRows = records.map((r, i) => `
+        <tr class="${i % 2 === 0 ? 'even' : 'odd'}">
+            <td>${r.studentId || '—'}</td>
+            <td>${r.studentName || '—'}</td>
+        </tr>`).join('');
+
+    const emptyMsg = records.length === 0
+        ? `<tr><td colspan="2" style="text-align:center;color:#888;padding:1.5rem;">No attendance records to export.</td></tr>`
+        : '';
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Attendance Report — ${session.moduleCode}</title>
+            <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body {
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    color: #111;
+                    padding: 3rem 3.5rem;
+                    background: #fff;
+                }
+                .header {
+                    border-bottom: 2px solid #1e40af;
+                    padding-bottom: 1rem;
+                    margin-bottom: 1.5rem;
+                }
+                .header-top {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                }
+                .brand {
+                    font-size: 0.75rem;
+                    color: #1e40af;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                }
+                .generated {
+                    font-size: 0.7rem;
+                    color: #777;
+                    text-align: right;
+                }
+                h1 {
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                    color: #1e3a8a;
+                    margin: 0.5rem 0 0.2rem;
+                }
+                .meta-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.5rem 2rem;
+                    margin-bottom: 1.5rem;
+                }
+                .meta-item label {
+                    display: block;
+                    font-size: 0.65rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                    color: #6b7280;
+                    margin-bottom: 0.15rem;
+                }
+                .meta-item span {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: #111;
+                }
+                .count-badge {
+                    display: inline-block;
+                    background: #dbeafe;
+                    color: #1e40af;
+                    font-weight: 700;
+                    font-size: 0.78rem;
+                    padding: 0.2rem 0.65rem;
+                    border-radius: 9999px;
+                    margin-bottom: 1rem;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 0.875rem;
+                }
+                thead th {
+                    background: #1e40af;
+                    color: #fff;
+                    padding: 0.65rem 0.85rem;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                    letter-spacing: 0.03em;
+                }
+                thead th:first-child { border-radius: 0.375rem 0 0 0; }
+                thead th:last-child  { border-radius: 0 0.375rem 0 0; }
+                tbody td {
+                    padding: 0.55rem 0.85rem;
+                    border-bottom: 1px solid #e5e7eb;
+                    color: #1f2937;
+                }
+                tr.even td { background: #f9fafb; }
+                tr.odd  td { background: #fff; }
+                .footer {
+                    margin-top: 2rem;
+                    padding-top: 0.75rem;
+                    border-top: 1px solid #e5e7eb;
+                    font-size: 0.68rem;
+                    color: #9ca3af;
+                    text-align: center;
+                }
+                @media print {
+                    body { padding: 1.5cm 2cm; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="header-top">
+                    <span class="brand">Attendance Shield</span>
+                    <span class="generated">Generated: ${now}</span>
+                </div>
+                <h1>${session.moduleCode} — ${session.moduleName}</h1>
+            </div>
+
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <label>Module Code</label>
+                    <span>${session.moduleCode}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Module Name</label>
+                    <span>${session.moduleName}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Lecture Topic</label>
+                    <span>${session.lectureTopic}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Lecture Date</label>
+                    <span>${new Date(session.lectureStartTime).toLocaleDateString()}</span>
+                </div>
+            </div>
+
+            <div class="count-badge">${records.length} student${records.length !== 1 ? 's' : ''} attended</div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:35%">Student ID</th>
+                        <th>Student Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}${emptyMsg}
+                </tbody>
+            </table>
+
+            <div class="footer">
+                Attendance Shield &mdash; Confidential &mdash; ${session.moduleCode} &mdash; ${now}
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 600);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 let allLoadedLogs = [];
