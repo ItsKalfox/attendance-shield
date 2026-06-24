@@ -217,26 +217,57 @@
             </div>
         </div>
 
-        <!-- TAB 4: STUDENT MANAGEMENT (ADMIN only) -->
+        <!-- TAB 4: USER MANAGEMENT (ADMIN only) -->
         <div id="tab-students" class="tab-content">
             <div class="card">
-                <div class="card-header" style="flex-wrap:wrap;gap:0.5rem;justify-content:space-between;align-items:center;">
-                    <h3>Student Management</h3>
-                    <div style="display:flex;gap:0.5rem;align-items:center;">
-                        <input id="student-search" type="text" class="form-input"
-                            placeholder="Search by name or student ID…"
-                            oninput="filterStudentCards()"
-                            style="width:200px;height:1.85rem;padding:0.25rem 0.5rem;font-size:0.8rem;">
-                        <button class="btn btn-primary" onclick="openAddStudentModal()"
-                            style="padding:0.25rem 0.75rem;font-size:0.8rem;height:1.85rem;">
-                            + Add Student
-                        </button>
-                        <button class="btn btn-secondary" onclick="loadStudents()"
-                            style="padding:0.25rem 0.5rem;font-size:0.8rem;height:1.85rem;">Refresh</button>
+                <!-- Top Sub-Tabs for User Types -->
+                <div class="sub-tab-bar" style="margin-bottom: 1.25rem;">
+                    <button id="subtab-student-btn" class="sub-tab-item active" onclick="switchUserSubTab('student')">Student Management</button>
+                    <button id="subtab-lecturer-btn" class="sub-tab-item" onclick="switchUserSubTab('lecturer')">Lecturer Management</button>
+                </div>
+
+                <!-- Student Management Panel -->
+                <div id="panel-student-management">
+                    <div class="card-header" style="flex-wrap:wrap;gap:0.5rem;justify-content:space-between;align-items:center;">
+                        <h3>Student Management</h3>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <input id="student-search" type="text" class="form-input"
+                                placeholder="Search by name or student ID…"
+                                oninput="filterStudentCards()"
+                                style="width:200px;height:1.85rem;padding:0.25rem 0.5rem;font-size:0.8rem;">
+                            <button class="btn btn-primary" onclick="openAddStudentModal()"
+                                style="padding:0.25rem 0.75rem;font-size:0.8rem;height:1.85rem;">
+                                + Add Student
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadStudents()"
+                                style="padding:0.25rem 0.5rem;font-size:0.8rem;height:1.85rem;">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="student-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding-top:1rem;">
+                        <!-- Student cards injected here -->
                     </div>
                 </div>
-                <div id="student-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding-top:1rem;">
-                    <!-- Student cards injected here -->
+
+                <!-- Lecturer Management Panel -->
+                <div id="panel-lecturer-management" class="hidden">
+                    <div class="card-header" style="flex-wrap:wrap;gap:0.5rem;justify-content:space-between;align-items:center;">
+                        <h3>Lecturer Management</h3>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <input id="lecturer-search" type="text" class="form-input"
+                                placeholder="Search by name or employee ID…"
+                                oninput="filterLecturerCards()"
+                                style="width:200px;height:1.85rem;padding:0.25rem 0.5rem;font-size:0.8rem;">
+                            <button class="btn btn-primary" onclick="openAddLecturerModal()"
+                                style="padding:0.25rem 0.75rem;font-size:0.8rem;height:1.85rem;">
+                                + Add Lecturer
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadLecturers()"
+                                style="padding:0.25rem 0.5rem;font-size:0.8rem;height:1.85rem;">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="lecturer-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding-top:1rem;">
+                        <!-- Lecturer cards injected here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -335,7 +366,7 @@
             <svg viewBox="0 0 24 24">
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
             </svg>
-            <span>Students</span>
+            <span>Users</span>
         </button>
     </div>
 
@@ -418,6 +449,87 @@
                     <div id="edit-student-error" class="hidden" style="margin-bottom:0.75rem;padding:0.6rem 0.85rem;border-radius:0.5rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);font-size:0.85rem;color:#f87171;"></div>
                     <div style="display:flex;gap:0.5rem;">
                         <button type="button" class="btn btn-secondary" onclick="exitEditMode()" style="flex:1;">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD LECTURER -->
+    <div id="add-lecturer-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:440px;">
+            <span class="close-btn" onclick="closeAddLecturerModal()">&times;</span>
+            <h3 class="modal-title">New Lecturer Record</h3>
+            <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:1.5rem;">A secure password will be generated and emailed to the lecturer.</p>
+            <form id="add-lecturer-form">
+                <div class="form-group">
+                    <label for="add-lecturer-id">Lecturer ID</label>
+                    <input type="text" id="add-lecturer-id" class="form-input" placeholder="e.g. L001" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-lecturer-name">Full Name</label>
+                    <input type="text" id="add-lecturer-name" class="form-input" placeholder="e.g. Dr. Jane Smith" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-lecturer-email">Email Address</label>
+                    <input type="email" id="add-lecturer-email" class="form-input" placeholder="lecturer@example.com" required>
+                </div>
+                <div id="add-lecturer-error" class="hidden" style="margin-bottom:0.75rem;padding:0.6rem 0.85rem;border-radius:0.5rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);font-size:0.85rem;color:#f87171;"></div>
+                <button type="submit" id="add-lecturer-submit-btn" class="btn btn-primary">Create &amp; Send Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: LECTURER DETAIL / EDIT -->
+    <div id="lecturer-detail-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:440px;">
+            <span class="close-btn" onclick="closeLecturerDetailModal()">&times;</span>
+            <h3 class="modal-title" id="detail-lecturer-heading">Lecturer Details</h3>
+
+            <!-- VIEW MODE -->
+            <div id="lecturer-view-mode">
+                <div style="display:grid;gap:0.75rem;margin-bottom:1.5rem;">
+                    <div style="background:rgba(15,23,42,0.5);padding:0.75rem;border-radius:0.5rem;border:1px solid var(--border-color);">
+                        <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.15rem;">Lecturer ID</div>
+                        <div id="view-lecturer-id" style="font-weight:600;"></div>
+                    </div>
+                    <div style="background:rgba(15,23,42,0.5);padding:0.75rem;border-radius:0.5rem;border:1px solid var(--border-color);">
+                        <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.15rem;">Full Name</div>
+                        <div id="view-lecturer-name" style="font-weight:600;"></div>
+                    </div>
+                    <div style="background:rgba(15,23,42,0.5);padding:0.75rem;border-radius:0.5rem;border:1px solid var(--border-color);">
+                        <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.15rem;">Email</div>
+                        <div id="view-lecturer-email" style="font-weight:600;"></div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="enterLecturerEditMode()" style="flex:1;padding:0.5rem;">✏️ Edit</button>
+                    <button class="btn btn-primary" id="btn-reset-lecturer-password" onclick="resetLecturerPassword()" style="flex:1;padding:0.5rem;background:var(--color-info, #06b6d4);box-shadow:0 4px 10px rgba(6,182,212,0.3);">🔑 Reset Password</button>
+                </div>
+                <button class="btn btn-danger" id="btn-delete-lecturer" onclick="deleteLecturer()" style="width:100%;margin-top:0.5rem;padding:0.5rem;">
+                    🗑 Delete Lecturer
+                </button>
+            </div>
+
+            <!-- EDIT MODE -->
+            <div id="lecturer-edit-mode" class="hidden">
+                <form id="edit-lecturer-form">
+                    <div class="form-group">
+                        <label for="edit-lecturer-id">Lecturer ID</label>
+                        <input type="text" id="edit-lecturer-id" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-lecturer-name">Full Name</label>
+                        <input type="text" id="edit-lecturer-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-lecturer-email">Email</label>
+                        <input type="email" id="edit-lecturer-email" class="form-input" required>
+                    </div>
+                    <div id="edit-lecturer-error" class="hidden" style="margin-bottom:0.75rem;padding:0.6rem 0.85rem;border-radius:0.5rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);font-size:0.85rem;color:#f87171;"></div>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button type="button" class="btn btn-secondary" onclick="exitLecturerEditMode()" style="flex:1;">Cancel</button>
                         <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
                     </div>
                 </form>

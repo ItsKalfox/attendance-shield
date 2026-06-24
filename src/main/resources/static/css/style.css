@@ -807,3 +807,50 @@ input[type="datetime-local"] {
         padding: 1rem 0.75rem !important;
     }
 }
+
+/* Custom pulsing dots loader inside buttons */
+.btn-loader {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 1rem;
+    vertical-align: middle;
+}
+
+.btn-loader span {
+    width: 6px;
+    height: 6px;
+    background-color: currentColor;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse-dot 1.2s infinite ease-in-out both;
+}
+
+.btn-loader span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.btn-loader span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes pulse-dot {
+    0%, 80%, 100% { 
+        transform: scale(0.6);
+        opacity: 0.4;
+    } 
+    40% { 
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+.btn:disabled, .btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none !important;
+}
+
+

@@ -114,5 +114,70 @@ public class EmailService {
                "<p style='font-size:0.8rem;color:#9ca3af;'>This code will expire in 5 minutes. If you did not make this request, please ignore this email.</p>" +
                "</div></body></html>";
     }
-}
 
+    public void sendLecturerWelcomeEmail(String toEmail, String fullName, String lecturerId, String password) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("pas.verify.support@gmail.com");
+            helper.setTo(toEmail);
+            helper.setSubject("Welcome to Attendance Shield — Lecturer Account Credentials");
+            helper.setText(buildLecturerWelcomeHtml(fullName, lecturerId, toEmail, password), true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            System.err.println("[EmailService] Failed to send lecturer welcome email to " + toEmail + ": " + e.getMessage());
+            throw new RuntimeException("Failed to send lecturer welcome email: " + e.getMessage(), e);
+        }
+    }
+
+    public void sendLecturerPasswordResetEmail(String toEmail, String fullName, String lecturerId, String newPassword) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("pas.verify.support@gmail.com");
+            helper.setTo(toEmail);
+            helper.setSubject("Attendance Shield — Lecturer Password Reset");
+            helper.setText(buildLecturerPasswordResetHtml(fullName, lecturerId, toEmail, newPassword), true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            System.err.println("[EmailService] Failed to send lecturer password reset email to " + toEmail + ": " + e.getMessage());
+            throw new RuntimeException("Failed to send lecturer password reset email: " + e.getMessage(), e);
+        }
+    }
+
+    private String buildLecturerWelcomeHtml(String name, String lecturerId, String email, String password) {
+        return "<!DOCTYPE html><html><body style='font-family:Inter,Arial,sans-serif;background:#0b0f19;color:#f3f4f6;padding:2rem;'>" +
+               "<div style='max-width:520px;margin:auto;background:rgba(20,26,46,0.95);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:2rem;'>" +
+               "<h1 style='font-size:1.5rem;margin-bottom:0.25rem;background:linear-gradient(135deg,#fff 30%,#a5b4fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;'>Attendance Shield</h1>" +
+               "<p style='color:#9ca3af;font-size:0.85rem;margin-bottom:2rem;'>Lecturer Console Access</p>" +
+               "<p style='margin-bottom:1rem;'>Hello <strong>" + name + "</strong>,</p>" +
+               "<p style='color:#9ca3af;margin-bottom:1.5rem;'>Your lecturer account has been created. Use the credentials below to log in to the instructor portal:</p>" +
+               "<div style='background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;padding:1.25rem;margin-bottom:1.5rem;'>" +
+               "<div style='margin-bottom:0.75rem;'><span style='color:#9ca3af;font-size:0.8rem;'>Lecturer ID</span><br><strong style='font-size:1rem;'>" + lecturerId + "</strong></div>" +
+               "<div style='margin-bottom:0.75rem;'><span style='color:#9ca3af;font-size:0.8rem;'>Email</span><br><strong style='font-size:1rem;'>" + email + "</strong></div>" +
+               "<div><span style='color:#9ca3af;font-size:0.8rem;'>Password</span><br><strong style='font-size:1.1rem;font-family:monospace;color:#3b82f6;'>" + password + "</strong></div>" +
+               "</div>" +
+               "<p style='font-size:0.8rem;color:#9ca3af;'>Please secure these details and sign in at the instructor portal.</p>" +
+               "</div></body></html>";
+    }
+
+    private String buildLecturerPasswordResetHtml(String name, String lecturerId, String email, String password) {
+        return "<!DOCTYPE html><html><body style='font-family:Inter,Arial,sans-serif;background:#0b0f19;color:#f3f4f6;padding:2rem;'>" +
+               "<div style='max-width:520px;margin:auto;background:rgba(20,26,46,0.95);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:2rem;'>" +
+               "<h1 style='font-size:1.5rem;margin-bottom:0.25rem;background:linear-gradient(135deg,#fff 30%,#a5b4fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;'>Attendance Shield</h1>" +
+               "<p style='color:#9ca3af;font-size:0.85rem;margin-bottom:2rem;'>Lecturer Password Reset</p>" +
+               "<p style='margin-bottom:1rem;'>Hello <strong>" + name + "</strong>,</p>" +
+               "<p style='color:#9ca3af;margin-bottom:1.5rem;'>Your password has been reset by an administrator. Use your updated credentials:</p>" +
+               "<div style='background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:0.5rem;padding:1.25rem;margin-bottom:1.5rem;'>" +
+               "<div style='margin-bottom:0.75rem;'><span style='color:#9ca3af;font-size:0.8rem;'>Lecturer ID</span><br><strong style='font-size:1rem;'>" + lecturerId + "</strong></div>" +
+               "<div style='margin-bottom:0.75rem;'><span style='color:#9ca3af;font-size:0.8rem;'>Email</span><br><strong style='font-size:1rem;'>" + email + "</strong></div>" +
+               "<div><span style='color:#9ca3af;font-size:0.8rem;'>New Password</span><br><strong style='font-size:1.1rem;font-family:monospace;color:#f59e0b;'>" + password + "</strong></div>" +
+               "</div>" +
+               "<p style='font-size:0.8rem;color:#9ca3af;'>If you did not initiate this request, please notify your administrator immediately.</p>" +
+               "</div></body></html>";
+    }
+}

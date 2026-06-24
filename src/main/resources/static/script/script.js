@@ -82,7 +82,12 @@ function switchTab(tabId) {
             loadAuditLogs();
         });
     } else if (tabId === 'students') {
-        loadStudents();
+        const isLecturerActive = document.getElementById("subtab-lecturer-btn") && document.getElementById("subtab-lecturer-btn").classList.contains("active");
+        if (isLecturerActive) {
+            loadLecturers();
+        } else {
+            loadStudents();
+        }
     }
 }
 
@@ -800,10 +805,14 @@ window.onclick = function (event) {
     const detailModal = document.getElementById("detail-modal");
     const addStudentModal = document.getElementById("add-student-modal");
     const studentDetailModal = document.getElementById("student-detail-modal");
+    const addLecturerModal = document.getElementById("add-lecturer-modal");
+    const lecturerDetailModal = document.getElementById("lecturer-detail-modal");
     if (event.target === qrModal) closeQrModal();
     if (event.target === detailModal) closeDetailModal();
     if (event.target === addStudentModal) closeAddStudentModal();
     if (event.target === studentDetailModal) closeStudentDetailModal();
+    if (event.target === addLecturerModal) closeAddLecturerModal();
+    if (event.target === lecturerDetailModal) closeLecturerDetailModal();
 }
 
 // ─── STUDENT MANAGEMENT ────────────────────────────────────────────
@@ -889,7 +898,7 @@ if (addStudentForm) {
         const btn = document.getElementById("add-student-submit-btn");
         if (btn) {
             btn.disabled = true;
-            btn.textContent = "Creating…";
+            btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
         }
 
         const payload = {
@@ -1039,7 +1048,7 @@ async function resetStudentPassword() {
     const btn = document.getElementById("btn-reset-password");
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "Sending…";
+        btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
     }
 
     try {
@@ -1060,3 +1069,275 @@ async function resetStudentPassword() {
         }
     }
 }
+
+// ─── LECTURER MANAGEMENT ───────────────────────────────────────────
+
+let allLecturers = [];
+let selectedLecturer = null;
+
+function switchUserSubTab(userType) {
+    document.querySelectorAll("#tab-students .sub-tab-item").forEach(el => el.classList.remove("active"));
+    const subTabBtn = document.getElementById(`subtab-${userType}-btn`);
+    if (subTabBtn) subTabBtn.classList.add("active");
+
+    if (userType === 'student') {
+        document.getElementById("panel-student-management").classList.remove("hidden");
+        document.getElementById("panel-lecturer-management").classList.add("hidden");
+        loadStudents();
+    } else {
+        document.getElementById("panel-student-management").classList.add("hidden");
+        document.getElementById("panel-lecturer-management").classList.remove("hidden");
+        loadLecturers();
+    }
+}
+
+async function loadLecturers() {
+    try {
+        const res = await fetch(`${BASE_URL}/api/lecturers`, { headers: getHeaders() });
+        if (!res.ok) return;
+        allLecturers = await res.json();
+        renderLecturerCards(allLecturers);
+    } catch (e) {
+        console.error("[Lecturers] Load error:", e);
+    }
+}
+
+function renderLecturerCards(lecturers) {
+    const grid = document.getElementById("lecturer-cards-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    if (lecturers.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:2rem;">No lecturers found.</div>`;
+        return;
+    }
+    lecturers.forEach(l => {
+        const card = document.createElement("div");
+        card.className = "attendee-card";
+        card.style.cssText = "cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;";
+        card.onmouseenter = () => { card.style.transform = "translateY(-2px)"; card.style.boxShadow = "0 8px 24px rgba(59,130,246,0.2)"; };
+        card.onmouseleave = () => { card.style.transform = ""; card.style.boxShadow = ""; };
+        card.onclick = () => openLecturerDetailModal(l);
+        card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:linear-gradient(135deg,#10b981,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0;">
+                    ${(l.fullName || "?")[0].toUpperCase()}
+                </div>
+                <div style="overflow:hidden;">
+                    <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.fullName}</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary);font-family:monospace;">${l.lecturerId || "—"}</div>
+                </div>
+            </div>`;
+        grid.appendChild(card);
+    });
+}
+
+function filterLecturerCards() {
+    const searchEl = document.getElementById("lecturer-search");
+    if (!searchEl) return;
+    const q = searchEl.value.toLowerCase().trim();
+    const filtered = q
+        ? allLecturers.filter(l =>
+            (l.fullName || "").toLowerCase().includes(q) ||
+            (l.lecturerId || "").toLowerCase().includes(q))
+        : allLecturers;
+    renderLecturerCards(filtered);
+}
+
+// ── Add Lecturer Modal ──
+function openAddLecturerModal() {
+    const addForm = document.getElementById("add-lecturer-form");
+    if (addForm) addForm.reset();
+    const errorEl = document.getElementById("add-lecturer-error");
+    if (errorEl) errorEl.classList.add("hidden");
+    const btn = document.getElementById("add-lecturer-submit-btn");
+    if (btn) btn.disabled = false;
+    const addModal = document.getElementById("add-lecturer-modal");
+    if (addModal) addModal.classList.remove("hidden");
+}
+
+function closeAddLecturerModal() {
+    const addModal = document.getElementById("add-lecturer-modal");
+    if (addModal) addModal.classList.add("hidden");
+}
+
+const addLecturerForm = document.getElementById("add-lecturer-form");
+if (addLecturerForm) {
+    addLecturerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorBox = document.getElementById("add-lecturer-error");
+        if (errorBox) errorBox.classList.add("hidden");
+        const btn = document.getElementById("add-lecturer-submit-btn");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
+        }
+
+        const payload = {
+            lecturerId: document.getElementById("add-lecturer-id").value.trim(),
+            fullName:  document.getElementById("add-lecturer-name").value.trim(),
+            email:     document.getElementById("add-lecturer-email").value.trim()
+        };
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/lecturers`, {
+                method: "POST",
+                headers: getHeaders(),
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                let msg = `Error (HTTP ${res.status})`;
+                try { const b = await res.json(); msg = b.message || msg; } catch(_) {}
+                throw new Error(msg);
+            }
+            closeAddLecturerModal();
+            showToast("Lecturer created — password sent by email", "success");
+            await loadLecturers();
+        } catch (err) {
+            console.error("[AddLecturer]", err);
+            if (errorBox) {
+                errorBox.textContent = err.message;
+                errorBox.classList.remove("hidden");
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "Create & Send Password";
+            }
+        }
+    });
+}
+
+// ── Lecturer Detail Modal ──
+function openLecturerDetailModal(lecturer) {
+    selectedLecturer = lecturer;
+    const heading = document.getElementById("detail-lecturer-heading");
+    if (heading) heading.textContent = lecturer.fullName;
+    const idEl = document.getElementById("view-lecturer-id");
+    if (idEl) idEl.textContent = lecturer.lecturerId || "—";
+    const nameEl = document.getElementById("view-lecturer-name");
+    if (nameEl) nameEl.textContent = lecturer.fullName;
+    const emailEl = document.getElementById("view-lecturer-email");
+    if (emailEl) emailEl.textContent = lecturer.email;
+
+    const viewMode = document.getElementById("lecturer-view-mode");
+    if (viewMode) viewMode.classList.remove("hidden");
+    const editMode = document.getElementById("lecturer-edit-mode");
+    if (editMode) editMode.classList.add("hidden");
+    const detailModal = document.getElementById("lecturer-detail-modal");
+    if (detailModal) detailModal.classList.remove("hidden");
+}
+
+function closeLecturerDetailModal() {
+    const detailModal = document.getElementById("lecturer-detail-modal");
+    if (detailModal) detailModal.classList.add("hidden");
+    selectedLecturer = null;
+}
+
+function enterLecturerEditMode() {
+    const idInput = document.getElementById("edit-lecturer-id");
+    if (idInput) idInput.value = selectedLecturer.lecturerId || "";
+    const nameInput = document.getElementById("edit-lecturer-name");
+    if (nameInput) nameInput.value = selectedLecturer.fullName;
+    const emailInput = document.getElementById("edit-lecturer-email");
+    if (emailInput) emailInput.value = selectedLecturer.email;
+
+    const errorEl = document.getElementById("edit-lecturer-error");
+    if (errorEl) errorEl.classList.add("hidden");
+    const viewMode = document.getElementById("lecturer-view-mode");
+    if (viewMode) viewMode.classList.add("hidden");
+    const editMode = document.getElementById("lecturer-edit-mode");
+    if (editMode) editMode.classList.remove("hidden");
+}
+
+function exitLecturerEditMode() {
+    const viewMode = document.getElementById("lecturer-view-mode");
+    if (viewMode) viewMode.classList.remove("hidden");
+    const editMode = document.getElementById("lecturer-edit-mode");
+    if (editMode) editMode.classList.add("hidden");
+}
+
+const editLecturerForm = document.getElementById("edit-lecturer-form");
+if (editLecturerForm) {
+    editLecturerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errorBox = document.getElementById("edit-lecturer-error");
+        if (errorBox) errorBox.classList.add("hidden");
+
+        const payload = {
+            lecturerId: document.getElementById("edit-lecturer-id").value.trim(),
+            fullName:  document.getElementById("edit-lecturer-name").value.trim(),
+            email:     document.getElementById("edit-lecturer-email").value.trim()
+        };
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}`, {
+                method: "PUT",
+                headers: getHeaders(),
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                let msg = `Error (HTTP ${res.status})`;
+                try { const b = await res.json(); msg = b.message || msg; } catch(_) {}
+                throw new Error(msg);
+            }
+            const updated = await res.json();
+            selectedLecturer = updated;
+            closeLecturerDetailModal();
+            showToast("Lecturer record updated", "success");
+            await loadLecturers();
+        } catch (err) {
+            console.error("[EditLecturer]", err);
+            if (errorBox) {
+                errorBox.textContent = err.message;
+                errorBox.classList.remove("hidden");
+            }
+        }
+    });
+}
+
+async function deleteLecturer() {
+    if (!selectedLecturer) return;
+    if (!confirm(`Delete lecturer "${selectedLecturer.fullName}"? This cannot be undone.`)) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}`, {
+            method: "DELETE",
+            headers: getHeaders()
+        });
+        if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
+        closeLecturerDetailModal();
+        showToast("Lecturer deleted", "success");
+        await loadLecturers();
+    } catch (err) {
+        console.error("[DeleteLecturer]", err);
+        showToast(err.message, "error");
+    }
+}
+
+async function resetLecturerPassword() {
+    if (!selectedLecturer) return;
+    const btn = document.getElementById("btn-reset-lecturer-password");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
+    }
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}/reset-password`, {
+            method: "POST",
+            headers: getHeaders()
+        });
+        if (!res.ok) throw new Error(`Reset failed (HTTP ${res.status})`);
+        showToast("New password sent to lecturer's email", "success");
+        closeLecturerDetailModal();
+    } catch (err) {
+        console.error("[ResetLecturerPassword]", err);
+        showToast(err.message, "error");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🔑 Reset Password";
+        }
+    }
+}
+

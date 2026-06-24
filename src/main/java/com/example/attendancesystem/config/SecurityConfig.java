@@ -77,8 +77,8 @@ public class SecurityConfig {
                 // Event log API mappings
                 .requestMatchers(HttpMethod.GET, "/api/events/session/{id}").hasAnyRole("LECTURER", "ADMIN")
 
-                // Student management — ADMIN only
-                .requestMatchers("/api/students/**").hasRole("ADMIN")
+                // Student & Lecturer management — ADMIN only
+                .requestMatchers("/api/students/**", "/api/lecturers/**").hasRole("ADMIN")
 
                 .anyRequest().authenticated()
             );

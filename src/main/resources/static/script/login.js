@@ -53,7 +53,7 @@ if (loginForm) {
         const submitBtn = loginForm.querySelector("button[type='submit']");
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = "Signing In...";
+            submitBtn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
         }
 
         try {
