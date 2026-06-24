@@ -278,24 +278,21 @@ function recalibrateLecturerLocation() {
             (position) => {
                 lecturerCurrentLat = position.coords.latitude;
                 lecturerCurrentLng = position.coords.longitude;
+                selectedLat = lecturerCurrentLat;
+                selectedLng = lecturerCurrentLng;
 
-                const useCurrentLoc = document.getElementById("session-use-current-loc");
-                if (useCurrentLoc && useCurrentLoc.checked) {
-                    selectedLat = lecturerCurrentLat;
-                    selectedLng = lecturerCurrentLng;
-                    if (lecturerMap && lecturerMarker) {
-                        lecturerMarker.setLatLng([selectedLat, selectedLng]);
-                        lecturerMap.setView([selectedLat, selectedLng], 15);
-                    }
+                if (lecturerMap && lecturerMarker) {
+                    lecturerMarker.setLatLng([selectedLat, selectedLng]);
+                    lecturerMap.setView([selectedLat, selectedLng], 15);
                 }
 
                 btn.disabled = false;
-                btn.textContent = "🔄 Recalibrate GPS Location";
+                btn.textContent = "Recalibrate GPS Location";
                 showToast("Lecturer GPS recalibrated successfully", "success");
             },
             (error) => {
                 btn.disabled = false;
-                btn.textContent = "🔄 Recalibrate GPS Location";
+                btn.textContent = "Recalibrate GPS Location";
                 let friendlyError = `Access Denied: ${error.message}`;
                 if (error.code === 1) { // PERMISSION_DENIED
                     friendlyError = "Permission Denied. Please enable location services in your browser settings.";
@@ -306,7 +303,7 @@ function recalibrateLecturerLocation() {
         );
     } else {
         btn.disabled = false;
-        btn.textContent = "🔄 Recalibrate GPS Location";
+        btn.textContent = "Recalibrate GPS Location";
         showToast("Geolocation is not supported by this browser.", "error");
     }
 }
@@ -317,9 +314,7 @@ function toggleGeofenceFields(enabled) {
     if (!fields) return;
     if (enabled) {
         fields.classList.remove("hidden");
-        const useCurrentLoc = document.getElementById("session-use-current-loc");
-        const useCurrent = useCurrentLoc ? useCurrentLoc.checked : false;
-        toggleLecturerMap(useCurrent);
+        initLecturerMap();
     } else {
         fields.classList.add("hidden");
     }
@@ -545,56 +540,45 @@ function openQrModal(session) {
     const printBtn = document.getElementById("btn-modal-print");
     if (printBtn) printBtn.onclick = () => printQrPDF(session);
 
-    // End session button inside modal — Step 1: show confirm row
+    // End session button inside modal — opens universal confirm modal
     const endBtn = document.getElementById("btn-modal-end");
-    const confirmRow = document.getElementById("end-session-confirm-row");
-    const confirmYes = document.getElementById("btn-end-confirm-yes");
 
     if (endBtn) {
         endBtn.disabled = false;
         endBtn.innerHTML = "Delete Session";
 
-        // Reset state each time modal is opened
-        if (confirmRow) confirmRow.classList.add("hidden");
+        // Clone to clear previous listeners
+        const newEndBtn = endBtn.cloneNode(true);
+        endBtn.parentNode.replaceChild(newEndBtn, endBtn);
 
-        endBtn.onclick = () => {
-            // Show inline confirmation row, hide main button
-            endBtn.classList.add("hidden");
-            if (confirmRow) confirmRow.classList.remove("hidden");
-        };
-    }
+        newEndBtn.onclick = () => {
+            showConfirmModal({
+                variant: 'danger',
+                title: 'Delete Session?',
+                body: 'This session and all its attendance records will be permanently removed. This action cannot be undone.',
+                confirmLabel: 'Yes, Delete',
+                onConfirm: async (closeModal) => {
+                    try {
+                        const res = await fetch(`${BASE_URL}/api/session/${session.sessionId}`, {
+                            method: "DELETE",
+                            headers: getHeaders()
+                        });
 
-    // Step 2: "Yes, End" actually ends the session
-    if (confirmYes) {
-        // Remove any old listener by cloning
-        const newYes = confirmYes.cloneNode(true);
-        confirmYes.parentNode.replaceChild(newYes, confirmYes);
-
-        newYes.onclick = async () => {
-            newYes.disabled = true;
-            newYes.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
-            try {
-                const res = await fetch(`${BASE_URL}/api/session/${session.sessionId}`, {
-                    method: "DELETE",
-                    headers: getHeaders()
-                });
-
-                if (res.ok) {
-                    showToast("Session deleted successfully", "success");
-                    closeQrModal();
-                    loadSessions();
-                } else {
-                    const errBody = await res.json().catch(() => ({}));
-                    throw new Error(errBody.message || `Failed to delete session (HTTP ${res.status})`);
+                        if (res.ok) {
+                            closeModal();
+                            showToast("Session deleted successfully", "success");
+                            closeQrModal();
+                            loadSessions();
+                        } else {
+                            const errBody = await res.json().catch(() => ({}));
+                            throw new Error(errBody.message || `Failed to delete session (HTTP ${res.status})`);
+                        }
+                    } catch (e) {
+                        closeModal();
+                        showToast(e.message, "error");
+                    }
                 }
-            } catch (e) {
-                showToast(e.message, "error");
-                // Reset UI on error
-                newYes.disabled = false;
-                newYes.innerHTML = "Yes, Delete";
-                if (confirmRow) confirmRow.classList.add("hidden");
-                if (endBtn) endBtn.classList.remove("hidden");
-            }
+            });
         };
     }
 
@@ -602,21 +586,9 @@ function openQrModal(session) {
     if (qrModal) qrModal.classList.remove("hidden");
 }
 
-function cancelEndSession() {
-    const endBtn = document.getElementById("btn-modal-end");
-    const confirmRow = document.getElementById("end-session-confirm-row");
-    if (endBtn) endBtn.classList.remove("hidden");
-    if (confirmRow) confirmRow.classList.add("hidden");
-}
-
 function closeQrModal() {
     const qrModal = document.getElementById("qr-modal");
     if (qrModal) qrModal.classList.add("hidden");
-    // Reset End Session confirm state
-    const endBtn = document.getElementById("btn-modal-end");
-    const confirmRow = document.getElementById("end-session-confirm-row");
-    if (endBtn) endBtn.classList.remove("hidden");
-    if (confirmRow) confirmRow.classList.add("hidden");
 }
 
 
@@ -859,12 +831,86 @@ window.onclick = function (event) {
     const studentDetailModal = document.getElementById("student-detail-modal");
     const addLecturerModal = document.getElementById("add-lecturer-modal");
     const lecturerDetailModal = document.getElementById("lecturer-detail-modal");
+    const confirmModal = document.getElementById("confirm-modal");
     if (event.target === qrModal) closeQrModal();
     if (event.target === detailModal) closeDetailModal();
     if (event.target === addStudentModal) closeAddStudentModal();
     if (event.target === studentDetailModal) closeStudentDetailModal();
     if (event.target === addLecturerModal) closeAddLecturerModal();
     if (event.target === lecturerDetailModal) closeLecturerDetailModal();
+    if (event.target === confirmModal) closeConfirmModal();
+}
+
+// ─── Universal Confirmation Modal ───────────────────────────────────
+
+/**
+ * Shows the shared confirmation modal.
+ * @param {object} opts
+ * @param {'danger'|'reset'} opts.variant  - 'danger' (red) or 'reset' (green)
+ * @param {string} opts.title
+ * @param {string} opts.body
+ * @param {string} opts.confirmLabel
+ * @param {(closeModal: Function) => void} opts.onConfirm - called when user clicks confirm
+ */
+function showConfirmModal({ variant = 'danger', title, body, confirmLabel = 'Confirm', onConfirm }) {
+    const modal       = document.getElementById('confirm-modal');
+    const iconEl      = document.getElementById('confirm-modal-icon');
+    const titleEl     = document.getElementById('confirm-modal-title');
+    const bodyEl      = document.getElementById('confirm-modal-body');
+    const confirmBtn  = document.getElementById('confirm-modal-confirm');
+    const cancelBtn   = document.getElementById('confirm-modal-cancel');
+
+    if (!modal) return;
+
+    // Set icon
+    if (variant === 'reset') {
+        iconEl.className = 'confirm-modal-icon confirm-modal-icon--reset';
+        iconEl.innerHTML = `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>`;
+    } else {
+        iconEl.className = 'confirm-modal-icon confirm-modal-icon--danger';
+        iconEl.innerHTML = `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>`;
+    }
+
+    // Set text
+    titleEl.textContent  = title || '';
+    bodyEl.textContent   = body  || '';
+    confirmBtn.textContent = confirmLabel;
+
+    // Set button colour variant
+    confirmBtn.className = `btn confirm-btn-confirm variant-${variant === 'reset' ? 'reset' : 'danger'}`;
+
+    // Wire confirm button — clone to clear old listeners
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    newConfirmBtn.className = `btn confirm-btn-confirm variant-${variant === 'reset' ? 'reset' : 'danger'}`;
+    newConfirmBtn.textContent = confirmLabel;
+    newConfirmBtn.onclick = async () => {
+        newConfirmBtn.disabled = true;
+        newConfirmBtn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
+        if (onConfirm) await onConfirm(closeConfirmModal);
+    };
+
+    // Wire cancel button
+    cancelBtn.onclick = () => closeConfirmModal();
+
+    // Show
+    modal.classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.classList.add('hidden');
+    // Re-enable the confirm button in case it was mid-loading
+    const confirmBtn = document.getElementById('confirm-modal-confirm');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+    }
 }
 
 // ─── STUDENT MANAGEMENT ────────────────────────────────────────────
@@ -1078,48 +1124,55 @@ if (editStudentForm) {
 
 async function deleteStudent() {
     if (!selectedStudent) return;
-    if (!confirm(`Delete student "${selectedStudent.fullName}"? This cannot be undone.`)) return;
-
-    try {
-        const res = await fetch(`${BASE_URL}/api/students/${selectedStudent.userId}`, {
-            method: "DELETE",
-            headers: getHeaders()
-        });
-        if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
-        closeStudentDetailModal();
-        showToast("Student deleted", "success");
-        await loadStudents();
-    } catch (err) {
-        console.error("[DeleteStudent]", err);
-        showToast(err.message, "error");
-    }
+    showConfirmModal({
+        variant: 'danger',
+        title: 'Delete Student?',
+        body: `"${selectedStudent.fullName}" and all their associated data will be permanently removed. This cannot be undone.`,
+        confirmLabel: 'Yes, Delete',
+        onConfirm: async (closeModal) => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/students/${selectedStudent.userId}`, {
+                    method: "DELETE",
+                    headers: getHeaders()
+                });
+                if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
+                closeModal();
+                closeStudentDetailModal();
+                showToast("Student deleted", "success");
+                await loadStudents();
+            } catch (err) {
+                console.error("[DeleteStudent]", err);
+                closeModal();
+                showToast(err.message, "error");
+            }
+        }
+    });
 }
 
 async function resetStudentPassword() {
     if (!selectedStudent) return;
-    const btn = document.getElementById("btn-reset-password");
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
-    }
-
-    try {
-        const res = await fetch(`${BASE_URL}/api/students/${selectedStudent.userId}/reset-password`, {
-            method: "POST",
-            headers: getHeaders()
-        });
-        if (!res.ok) throw new Error(`Reset failed (HTTP ${res.status})`);
-        showToast("New password sent to student's email", "success");
-        closeStudentDetailModal();
-    } catch (err) {
-        console.error("[ResetPassword]", err);
-        showToast(err.message, "error");
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "🔑 Reset Password";
+    showConfirmModal({
+        variant: 'reset',
+        title: 'Reset Password?',
+        body: `A new secure password will be generated and emailed to ${selectedStudent.fullName} (${selectedStudent.email}).`,
+        confirmLabel: 'Yes, Reset',
+        onConfirm: async (closeModal) => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/students/${selectedStudent.userId}/reset-password`, {
+                    method: "POST",
+                    headers: getHeaders()
+                });
+                if (!res.ok) throw new Error(`Reset failed (HTTP ${res.status})`);
+                closeModal();
+                showToast("New password sent to student's email", "success");
+                closeStudentDetailModal();
+            } catch (err) {
+                console.error("[ResetPassword]", err);
+                closeModal();
+                showToast(err.message, "error");
+            }
         }
-    }
+    });
 }
 
 // ─── LECTURER MANAGEMENT ───────────────────────────────────────────
@@ -1340,48 +1393,55 @@ if (editLecturerForm) {
 
 async function deleteLecturer() {
     if (!selectedLecturer) return;
-    if (!confirm(`Delete lecturer "${selectedLecturer.fullName}"? This cannot be undone.`)) return;
-
-    try {
-        const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}`, {
-            method: "DELETE",
-            headers: getHeaders()
-        });
-        if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
-        closeLecturerDetailModal();
-        showToast("Lecturer deleted", "success");
-        await loadLecturers();
-    } catch (err) {
-        console.error("[DeleteLecturer]", err);
-        showToast(err.message, "error");
-    }
+    showConfirmModal({
+        variant: 'danger',
+        title: 'Delete Lecturer?',
+        body: `"${selectedLecturer.fullName}" and all their associated data will be permanently removed. This cannot be undone.`,
+        confirmLabel: 'Yes, Delete',
+        onConfirm: async (closeModal) => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}`, {
+                    method: "DELETE",
+                    headers: getHeaders()
+                });
+                if (!res.ok) throw new Error(`Delete failed (HTTP ${res.status})`);
+                closeModal();
+                closeLecturerDetailModal();
+                showToast("Lecturer deleted", "success");
+                await loadLecturers();
+            } catch (err) {
+                console.error("[DeleteLecturer]", err);
+                closeModal();
+                showToast(err.message, "error");
+            }
+        }
+    });
 }
 
 async function resetLecturerPassword() {
     if (!selectedLecturer) return;
-    const btn = document.getElementById("btn-reset-lecturer-password");
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<div class="btn-loader"><span></span><span></span><span></span></div>';
-    }
-
-    try {
-        const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}/reset-password`, {
-            method: "POST",
-            headers: getHeaders()
-        });
-        if (!res.ok) throw new Error(`Reset failed (HTTP ${res.status})`);
-        showToast("New password sent to lecturer's email", "success");
-        closeLecturerDetailModal();
-    } catch (err) {
-        console.error("[ResetLecturerPassword]", err);
-        showToast(err.message, "error");
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = "🔑 Reset Password";
+    showConfirmModal({
+        variant: 'reset',
+        title: 'Reset Password?',
+        body: `A new secure password will be generated and emailed to ${selectedLecturer.fullName} (${selectedLecturer.email}).`,
+        confirmLabel: 'Yes, Reset',
+        onConfirm: async (closeModal) => {
+            try {
+                const res = await fetch(`${BASE_URL}/api/lecturers/${selectedLecturer.userId}/reset-password`, {
+                    method: "POST",
+                    headers: getHeaders()
+                });
+                if (!res.ok) throw new Error(`Reset failed (HTTP ${res.status})`);
+                closeModal();
+                showToast("New password sent to lecturer's email", "success");
+                closeLecturerDetailModal();
+            } catch (err) {
+                console.error("[ResetLecturerPassword]", err);
+                closeModal();
+                showToast(err.message, "error");
+            }
         }
-    }
+    });
 }
 
 async function refreshAuditLogs(btn) {

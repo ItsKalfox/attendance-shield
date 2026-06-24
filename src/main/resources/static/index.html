@@ -131,20 +131,13 @@
 
                     <div class="form-group" style="margin: 1.25rem 0;">
                         <label class="switch-group">
-                            <input type="checkbox" id="session-geofence" class="switch-input" checked
+                            <input type="checkbox" id="session-geofence" class="switch-input"
                                 onchange="toggleGeofenceFields(this.checked)">
                             <span>Enforce Location Geofence</span>
                         </label>
                     </div>
 
-                    <div id="geofence-fields">
-                        <div class="form-group" style="margin: 0.75rem 0;">
-                            <label class="switch-group">
-                                <input type="checkbox" id="session-use-current-loc" class="switch-input" checked
-                                    onchange="toggleLecturerMap(this.checked)">
-                                <span>Use current location as center</span>
-                            </label>
-                        </div>
+                    <div id="geofence-fields" class="hidden">
 
                         <!-- Map Container -->
                         <div id="lecturer-map-container" style="position: relative; margin-bottom: 1.25rem;">
@@ -161,16 +154,13 @@
                                 <div id="lecturer-map"
                                     style="height: 100%; border-radius: 0.5rem; border: 1px solid var(--border-color); background: #111;">
                                 </div>
-                                <div id="map-disabled-overlay">
-                                    <span>Using current GPS location as center</span>
-                                </div>
                             </div>
                         </div>
 
                         <!-- Recalibrate GPS Button -->
                         <button type="button" class="btn btn-secondary" id="btn-lecturer-gps" onclick="recalibrateLecturerLocation()"
                             style="width: 100%; margin-bottom: 1.25rem; font-size: 0.8rem; padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-primary);">
-                            🔄 Recalibrate GPS Location
+                            Recalibrate GPS Location
                         </button>
 
                         <div class="form-group">
@@ -306,17 +296,10 @@
                     Print QR PDF Sheet
                 </button>
 
-                <!-- Step 1: Delete trigger button -->
+                <!-- Delete Session trigger button -->
                 <button class="btn btn-danger" id="btn-modal-end" style="width: 100%; margin-top: 0.5rem;">
                     Delete Session
                 </button>
-
-                <!-- Step 2: Inline confirmation row (hidden by default) -->
-                <div id="end-session-confirm-row" class="hidden" style="margin-top:0.5rem; display:flex; gap:0.5rem; align-items:center; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:0.5rem; padding:0.6rem 0.75rem;">
-                    <span style="flex:1; font-size:0.8rem; color:var(--text-secondary);">Delete this session? All attendance records will be permanently removed.</span>
-                    <button id="btn-end-confirm-yes" class="btn btn-danger" style="padding:0.3rem 0.75rem; font-size:0.78rem; flex-shrink:0;">Yes, Delete</button>
-                    <button id="btn-end-confirm-cancel" class="btn btn-secondary" style="padding:0.3rem 0.75rem; font-size:0.78rem; flex-shrink:0;" onclick="cancelEndSession()">Cancel</button>
-                </div>
             </div>
         </div>
     </div>
@@ -443,11 +426,11 @@
                     </div>
                 </div>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="enterEditMode()" style="flex:1;padding:0.5rem;">✏️ Edit</button>
-                    <button class="btn btn-primary" id="btn-reset-password" onclick="resetStudentPassword()" style="flex:1;padding:0.5rem;background:var(--color-info, #06b6d4);box-shadow:0 4px 10px rgba(6,182,212,0.3);">🔑 Reset Password</button>
+                    <button class="btn btn-secondary" onclick="enterEditMode()" style="flex:1;padding:0.5rem;">Edit</button>
+                    <button class="btn btn-primary" id="btn-reset-password" onclick="resetStudentPassword()" style="flex:1;padding:0.5rem;background:var(--color-info, #06b6d4);box-shadow:0 4px 10px rgba(6,182,212,0.3);">Reset Password</button>
                 </div>
                 <button class="btn btn-danger" id="btn-delete-student" onclick="deleteStudent()" style="width:100%;margin-top:0.5rem;padding:0.5rem;">
-                    🗑 Delete Student
+                    Delete Student
                 </button>
             </div>
 
@@ -516,11 +499,11 @@
                     </div>
                 </div>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="enterLecturerEditMode()" style="flex:1;padding:0.5rem;">✏️ Edit</button>
-                    <button class="btn btn-primary" id="btn-reset-lecturer-password" onclick="resetLecturerPassword()" style="flex:1;padding:0.5rem;background:var(--color-info, #06b6d4);box-shadow:0 4px 10px rgba(6,182,212,0.3);">🔑 Reset Password</button>
+                    <button class="btn btn-secondary" onclick="enterLecturerEditMode()" style="flex:1;padding:0.5rem;">Edit</button>
+                    <button class="btn btn-primary" id="btn-reset-lecturer-password" onclick="resetLecturerPassword()" style="flex:1;padding:0.5rem;background:var(--color-info, #06b6d4);box-shadow:0 4px 10px rgba(6,182,212,0.3);">Reset Password</button>
                 </div>
                 <button class="btn btn-danger" id="btn-delete-lecturer" onclick="deleteLecturer()" style="width:100%;margin-top:0.5rem;padding:0.5rem;">
-                    🗑 Delete Lecturer
+                    Delete Lecturer
                 </button>
             </div>
 
@@ -541,6 +524,24 @@
                         <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: UNIVERSAL CONFIRM DIALOG -->
+    <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+        <div class="confirm-modal-content" onclick="event.stopPropagation()">
+            <!-- Icon -->
+            <div id="confirm-modal-icon" class="confirm-modal-icon confirm-modal-icon--danger">
+                <!-- SVG swapped by JS -->
+            </div>
+            <!-- Text -->
+            <h4 id="confirm-modal-title" class="confirm-modal-title"></h4>
+            <p id="confirm-modal-body" class="confirm-modal-body"></p>
+            <!-- Actions -->
+            <div class="confirm-modal-actions">
+                <button id="confirm-modal-cancel" class="btn btn-secondary confirm-btn-cancel">Cancel</button>
+                <button id="confirm-modal-confirm" class="btn confirm-btn-confirm">Confirm</button>
             </div>
         </div>
     </div>
