@@ -464,6 +464,36 @@ input[type="datetime-local"] {
     padding-right: 1.5rem;
 }
 
+/* Modal header layout for alignment */
+.modal-header {
+    display: grid;
+    grid-template-columns: 32px 1fr 32px;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    width: 100%;
+}
+
+.modal-header .modal-title {
+    margin-bottom: 0;
+    padding-right: 0;
+    text-align: center;
+}
+
+.modal-header #btn-detail-settings {
+    justify-self: start;
+    color: var(--text-secondary);
+}
+
+.modal-header #btn-detail-settings:hover {
+    color: white;
+}
+
+.modal-header .close-btn {
+    position: static;
+    justify-self: end;
+    line-height: 1;
+}
+
 /* SVG Circular Chart */
 .chart-container {
     display: flex;
@@ -999,6 +1029,7 @@ input[type="datetime-local"] {
     border-radius: 50%;
     background: var(--color-primary);
     cursor: pointer;
+    margin-top: -7px; /* Adjust this */
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 2px 6px rgba(0, 0, 0, 0.4);
     transition: box-shadow 0.2s, transform 0.15s;
     border: 2px solid #fff;

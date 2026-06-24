@@ -698,7 +698,7 @@ let currentSessionRecords = [];
 async function openDetailModal(session) {
     currentDetailSession = session;
     const detailTitle = document.getElementById("modal-detail-title");
-    if (detailTitle) detailTitle.textContent = `${session.moduleCode} - Statistics`;
+    if (detailTitle) detailTitle.textContent = `${session.moduleName}`;
     const detailTopic = document.getElementById("modal-detail-topic");
     if (detailTopic) detailTopic.textContent = `Topic: ${session.lectureTopic}`;
 
@@ -709,8 +709,6 @@ async function openDetailModal(session) {
     if (flagCheckbox) flagCheckbox.checked = false;
     const settingsPanel = document.getElementById("detail-settings-panel");
     if (settingsPanel) settingsPanel.classList.add("hidden");
-    const settingsBtn = document.getElementById("btn-detail-settings");
-    if (settingsBtn) settingsBtn.style.color = '';
 
     await loadSessionRecords(session.sessionId);
     const detailModal = document.getElementById("detail-modal");
@@ -825,11 +823,7 @@ function toggleFlagReason(iconElement) {
 
 function toggleDetailSettings() {
     const panel = document.getElementById("detail-settings-panel");
-    const btn   = document.getElementById("btn-detail-settings");
-    if (!panel) return;
-    const isHidden = panel.classList.toggle("hidden");
-    // Highlight gear icon when panel is open
-    if (btn) btn.style.color = isHidden ? '' : 'var(--color-primary)';
+    if (panel) panel.classList.toggle("hidden");
 }
 
 function exportAttendancePDF() {
