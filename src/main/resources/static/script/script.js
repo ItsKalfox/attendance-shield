@@ -915,7 +915,7 @@ function exportAttendancePDF() {
         </tr>`).join('');
 
     const emptyMsg = records.length === 0
-        ? `<tr><td colspan="2" style="text-align:center;color:#888;padding:1.5rem;">No attendance records to export.</td></tr>`
+        ? `<tr><td colspan="2" style="text-align:center;color:#000;padding:1.5rem;">No attendance records to export.</td></tr>`
         : '';
 
     const printWindow = window.open('', '_blank');
@@ -927,38 +927,35 @@ function exportAttendancePDF() {
             <title>Attendance Report — ${session.moduleCode}</title>
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
+                @page {
+                    margin: 1in;
+                }
                 body {
-                    font-family: 'Segoe UI', Arial, sans-serif;
-                    color: #111;
-                    padding: 3rem 3.5rem;
+                    font-family: 'Times New Roman', Times, serif;
+                    color: #000;
                     background: #fff;
+                    font-size: 12pt;
+                    line-height: 1.4;
                 }
                 .header {
-                    border-bottom: 2px solid #1e40af;
-                    padding-bottom: 1rem;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 0.5rem;
                     margin-bottom: 1.5rem;
                 }
                 .header-top {
                     display: flex;
-                    justify-content: space-between;
+                    justify-content: flex-end;
                     align-items: flex-start;
                 }
-                .brand {
-                    font-size: 0.75rem;
-                    color: #1e40af;
-                    font-weight: 700;
-                    letter-spacing: 0.08em;
-                    text-transform: uppercase;
-                }
                 .generated {
-                    font-size: 0.7rem;
-                    color: #777;
+                    font-size: 12pt;
+                    color: #000;
                     text-align: right;
                 }
                 h1 {
-                    font-size: 1.4rem;
-                    font-weight: 700;
-                    color: #1e3a8a;
+                    font-size: 14pt;
+                    font-weight: bold;
+                    color: #000;
                     margin: 0.5rem 0 0.2rem;
                 }
                 .meta-grid {
@@ -969,61 +966,53 @@ function exportAttendancePDF() {
                 }
                 .meta-item label {
                     display: block;
-                    font-size: 0.65rem;
-                    font-weight: 700;
+                    font-size: 12pt;
+                    font-weight: bold;
                     text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    color: #6b7280;
+                    color: #000;
                     margin-bottom: 0.15rem;
                 }
                 .meta-item span {
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                    color: #111;
+                    font-size: 13pt;
+                    color: #000;
                 }
                 .count-badge {
                     display: inline-block;
-                    background: #dbeafe;
-                    color: #1e40af;
-                    font-weight: 700;
-                    font-size: 0.78rem;
+                    border: 1px solid #000;
+                    color: #000;
+                    font-weight: bold;
+                    font-size: 13pt;
                     padding: 0.2rem 0.65rem;
-                    border-radius: 9999px;
                     margin-bottom: 1rem;
                 }
                 table {
                     width: 100%;
                     border-collapse: collapse;
-                    font-size: 0.875rem;
+                    font-size: 12pt;
                 }
                 thead th {
-                    background: #1e40af;
-                    color: #fff;
+                    border-top: 1px solid #000;
+                    border-bottom: 2px solid #000;
+                    color: #000;
                     padding: 0.65rem 0.85rem;
                     text-align: left;
-                    font-weight: 600;
-                    font-size: 0.8rem;
-                    letter-spacing: 0.03em;
+                    font-weight: bold;
+                    font-size: 13pt;
                 }
-                thead th:first-child { border-radius: 0.375rem 0 0 0; }
-                thead th:last-child  { border-radius: 0 0.375rem 0 0; }
                 tbody td {
                     padding: 0.55rem 0.85rem;
-                    border-bottom: 1px solid #e5e7eb;
-                    color: #1f2937;
+                    border-bottom: 1px solid #000;
+                    color: #000;
                 }
-                tr.even td { background: #f9fafb; }
-                tr.odd  td { background: #fff; }
                 .footer {
                     margin-top: 2rem;
                     padding-top: 0.75rem;
-                    border-top: 1px solid #e5e7eb;
-                    font-size: 0.68rem;
-                    color: #9ca3af;
+                    border-top: 1px solid #000;
+                    font-size: 12pt;
+                    color: #000;
                     text-align: center;
                 }
                 @media print {
-                    body { padding: 1.5cm 2cm; }
                     .no-print { display: none; }
                 }
             </style>
@@ -1031,7 +1020,6 @@ function exportAttendancePDF() {
         <body>
             <div class="header">
                 <div class="header-top">
-                    <span class="brand">Attendance Shield</span>
                     <span class="generated">Generated: ${now}</span>
                 </div>
                 <h1>${session.moduleCode} — ${session.moduleName}</h1>
@@ -1071,7 +1059,7 @@ function exportAttendancePDF() {
             </table>
 
             <div class="footer">
-                Attendance Shield &mdash; Confidential &mdash; ${session.moduleCode} &mdash; ${now}
+                Confidential &mdash; ${session.moduleCode} &mdash; ${now}
             </div>
 
             <script>
