@@ -529,8 +529,12 @@ function renderSessionLists() {
     activeList.innerHTML = "";
     pastList.innerHTML = "";
 
-    const activeItems = allSessions.filter(s => s.status === 'ACTIVE' || s.status === 'SCHEDULED');
-    const pastItems = allSessions.filter(s => s.status === 'ENDED');
+    const activeItems = allSessions
+        .filter(s => s.status === 'ACTIVE' || s.status === 'SCHEDULED')
+        .sort((a, b) => b.sessionId - a.sessionId);
+    const pastItems = allSessions
+        .filter(s => s.status === 'ENDED')
+        .sort((a, b) => b.sessionId - a.sessionId);
 
     if (activeItems.length === 0) {
         activeList.innerHTML = `<p style="text-align:center; padding: 2rem; color: var(--text-secondary); font-size:0.85rem;">No active or scheduled sessions found.</p>`;
