@@ -57,7 +57,7 @@ public class EventLogController {
     public ResponseEntity<List<EventLogResponse>> getEventLogsBySession(
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal principal) {
-        
+
         // Ownership check
         com.example.attendancesystem.dto.SessionResponse session = sessionService.getSessionDetails(id);
         if (principal.getRole() == Role.LECTURER && !session.getLecturerId().equals(principal.getUserId())) {
