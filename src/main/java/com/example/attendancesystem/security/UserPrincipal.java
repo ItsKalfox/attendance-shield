@@ -15,12 +15,14 @@ public class UserPrincipal implements UserDetails {
     private final String email;
     private final String password;
     private final Role role;
+    private final String fullName;
 
-    public UserPrincipal(Long userId, String email, String password, Role role) {
+    public UserPrincipal(Long userId, String email, String password, Role role, String fullName) {
         this.userId = userId;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.fullName = fullName;
     }
 
     public static UserPrincipal create(User user) {
@@ -28,7 +30,8 @@ public class UserPrincipal implements UserDetails {
                 user.getUserId(),
                 user.getEmail(),
                 user.getPasswordHash(),
-                user.getRole()
+                user.getRole(),
+                user.getFullName()
         );
     }
 
@@ -38,6 +41,10 @@ public class UserPrincipal implements UserDetails {
 
     public Role getRole() {
         return role;
+    }
+
+    public String getFullName() {
+        return fullName;
     }
 
     @Override

@@ -43,4 +43,9 @@ public class EventLogService {
     public List<EventLog> getEventLogsBySession(Long sessionId) {
         return eventLogRepository.findBySession_SessionIdOrSessionNullOrderByTimestampDesc(sessionId);
     }
+
+    @Transactional(readOnly = true)
+    public List<EventLog> getAllEventLogs() {
+        return eventLogRepository.findAllByOrderByTimestampDesc();
+    }
 }

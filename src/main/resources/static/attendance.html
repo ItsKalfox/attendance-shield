@@ -60,7 +60,7 @@
             padding: 2rem;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             width: 100%;
-            max-width: 480px;
+            max-width: 410px;
             text-align: center;
             transition: all 0.3s ease;
         }
@@ -194,7 +194,7 @@
 
         @media (max-width: 600px) {
             body {
-                padding: 1rem 0.5rem;
+                padding: 1rem 1.5rem;
             }
             .card {
                 padding: 1.5rem 1.15rem;
@@ -281,7 +281,6 @@
         <div class="response-icon response-failed">✕</div>
         <h2>Invalid Scanning Attempt</h2>
         <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.95rem;">No valid QR security token was detected in the URL query parameters.</p>
-        <button class="btn btn-primary" onclick="window.location.href='/'">Go to Main Portal</button>
     </div>
 
     <!-- STATE 2: CHECKING SESSION DETAILS -->
@@ -331,8 +330,8 @@
     <!-- STATE 5: RESPONSE STATE -->
     <div id="response-card" class="card hidden">
         <div id="response-icon" class="response-icon">✓</div>
-        <h2 id="response-title">Check-in Complete</h2>
-        <p id="response-desc" style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.95rem;">Your check-in status was successfully verified and recorded.</p>
+        <h2 id="response-title">Thank you!</h2>
+        <p id="response-desc" style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.95rem;">Attendance recorded successfully.</p>
         
         <div id="response-badge-container" style="margin: 1.5rem 0;">
             <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Security Classification:</div>
@@ -450,7 +449,6 @@
                     <div class="response-icon response-failed">✕</div>
                     <h2>Session Check Failed</h2>
                     <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.95rem;">${err.message}</p>
-                    <button class="btn btn-primary" onclick="window.location.href='/'" style="margin-top: 1.5rem;">Go to Main Portal</button>
                 `;
             }
         }
@@ -498,6 +496,17 @@
             } catch (err) {
                 errorBox.textContent = err.message;
                 errorBox.classList.remove("hidden");
+                if (err.message && err.message.includes("already recorded")) {
+                    errorBox.style.background = "rgba(16, 185, 129, 0.15)";
+                    errorBox.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+                    errorBox.style.color = "#34d399";
+                    document.getElementById("login-email").value = "";
+                    document.getElementById("login-password").value = "";
+                } else {
+                    errorBox.style.background = "rgba(239, 68, 68, 0.1)";
+                    errorBox.style.border = "1px solid rgba(239, 68, 68, 0.2)";
+                    errorBox.style.color = "#f87171";
+                }
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = "Sign In & Check In";
@@ -558,8 +567,8 @@
                 } else {
                     icon.textContent = "✓";
                     icon.className = "response-icon response-success";
-                    title.textContent = "Check-in Complete";
-                    desc.textContent = `Presence recorded successfully. Status: ${data.status}`;
+                    title.textContent = "Thank you!";
+                    desc.textContent = `Attendance recorded successfully. Status: ${data.status}`;
                     badge.textContent = `Flag Level: ${data.flagLevel}`;
                     
                     if (data.flagLevel === 'NONE') {
@@ -582,6 +591,16 @@
             } catch (err) {
                 errorBox.textContent = err.message;
                 errorBox.classList.remove("hidden");
+                if (err.message && err.message.includes("already recorded")) {
+                    errorBox.style.background = "rgba(16, 185, 129, 0.15)";
+                    errorBox.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+                    errorBox.style.color = "#34d399";
+                } else {
+                    errorBox.style.background = "rgba(239, 68, 68, 0.1)";
+                    errorBox.style.border = "1px solid rgba(239, 68, 68, 0.2)";
+                    errorBox.style.color = "#f87171";
+                }
+                throw err;
             }
         }
 

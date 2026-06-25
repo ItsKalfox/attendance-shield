@@ -34,6 +34,7 @@ public class JwtTokenProvider {
                 .subject(userPrincipal.getUsername())
                 .claim("userId", userPrincipal.getUserId())
                 .claim("role", userPrincipal.getRole().name())
+                .claim("fullName", userPrincipal.getFullName())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key, Jwts.SIG.HS256)
@@ -79,5 +80,14 @@ public class JwtTokenProvider {
                 .getPayload();
         String roleStr = claims.get("role", String.class);
         return Role.valueOf(roleStr);
+    }
+
+    public String getFullNameFromJWT(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("fullName", String.class);
     }
 }

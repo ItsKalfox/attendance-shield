@@ -29,6 +29,30 @@ public class EventLogController {
         this.sessionService = sessionService;
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<EventLogResponse>> getAllEventLogs(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        if (principal.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("Only admins can view all event logs");
+        }
+
+        List<EventLog> logs = eventLogService.getAllEventLogs();
+        List<EventLogResponse> response = logs.stream().map(log -> {
+            EventLogResponse dto = new EventLogResponse();
+            dto.setEventId(log.getEventId());
+            dto.setSessionId(log.getSession() != null ? log.getSession().getSessionId() : null);
+            dto.setUserId(log.getUser() != null ? log.getUser().getUserId() : null);
+            dto.setUserEmail(log.getUser() != null ? log.getUser().getEmail() : null);
+            dto.setEventType(log.getEventType());
+            dto.setTimestamp(log.getTimestamp());
+            dto.setIpAddress(log.getIpAddress());
+            dto.setUserAgent(log.getUserAgent());
+            dto.setExtraData(log.getExtraData());
+            return dto;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/session/{id}")
     public ResponseEntity<List<EventLogResponse>> getEventLogsBySession(
             @PathVariable Long id,

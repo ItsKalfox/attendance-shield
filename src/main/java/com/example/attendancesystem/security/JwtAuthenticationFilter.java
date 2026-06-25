@@ -29,9 +29,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = tokenProvider.getEmailFromJWT(jwt);
                 Long userId = tokenProvider.getUserIdFromJWT(jwt);
                 Role role = tokenProvider.getRoleFromJWT(jwt);
+                String fullName = tokenProvider.getFullNameFromJWT(jwt);
 
                 // Build UserPrincipal without querying database (stateless, token-based verification)
-                UserPrincipal userDetails = new UserPrincipal(userId, email, "", role);
+                UserPrincipal userDetails = new UserPrincipal(userId, email, "", role, fullName);
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

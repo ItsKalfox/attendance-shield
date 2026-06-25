@@ -121,12 +121,12 @@ function parseAndValidateToken() {
         // Expiry Check
         if (claims.exp * 1000 < Date.now()) {
             showToast("Session expired, please login again", "error");
-            logout();
+            logout(true);
             return;
         }
 
         if (claims.role === 'STUDENT') {
-            logout();
+            logout(true);
             return;
         }
 
@@ -134,17 +134,34 @@ function parseAndValidateToken() {
             userId: claims.userId,
             email: claims.sub,
             role: claims.role,
-            fullName: claims.role === 'LECTURER' ? 'Dr. Jane Smith' : claims.role === 'ADMIN' ? 'System Admin' : 'John Doe'
+            fullName: claims.fullName || (claims.role === 'LECTURER' ? 'Lecturer' : claims.role === 'ADMIN' ? 'System Admin' : 'John Doe')
         };
 
         showDashboard(claims.role);
     } catch (e) {
-        logout();
+        logout(true);
     }
 }
 
 // Logout
-function logout() {
+function logout(force = false) {
+    if (force) {
+        performLogout();
+        return;
+    }
+    showConfirmModal({
+        variant: 'danger',
+        title: 'Logout?',
+        body: 'Are you sure you want to log out?',
+        confirmLabel: 'Yes, Logout',
+        onConfirm: (closeModal) => {
+            closeModal();
+            performLogout();
+        }
+    });
+}
+
+function performLogout() {
     sessionStorage.removeItem("jwt_token");
     jwtToken = "";
     currentUser = null;
@@ -710,6 +727,45 @@ async function openDetailModal(session) {
     const settingsPanel = document.getElementById("detail-settings-panel");
     if (settingsPanel) settingsPanel.classList.add("hidden");
 
+    // Manage Delete Session button visibility and behavior (Admin only)
+    const deleteBtn = document.getElementById("btn-detail-delete");
+    if (deleteBtn) {
+        if (currentUser && currentUser.role === 'ADMIN') {
+            deleteBtn.classList.remove("hidden");
+            deleteBtn.onclick = () => {
+                showConfirmModal({
+                    variant: 'danger',
+                    title: 'Delete Session?',
+                    body: 'This session and all its attendance records will be permanently removed. This action cannot be undone.',
+                    confirmLabel: 'Yes, Delete',
+                    onConfirm: async (closeModal) => {
+                        try {
+                            const res = await fetch(`${BASE_URL}/api/session/${session.sessionId}`, {
+                                method: "DELETE",
+                                headers: getHeaders()
+                            });
+
+                            if (res.ok) {
+                                closeModal();
+                                showToast("Session deleted successfully", "success");
+                                closeDetailModal();
+                                loadSessions();
+                            } else {
+                                const errBody = await res.json().catch(() => ({}));
+                                throw new Error(errBody.message || `Failed to delete session (HTTP ${res.status})`);
+                            }
+                        } catch (e) {
+                            closeModal();
+                            showToast(e.message, "error");
+                        }
+                    }
+                });
+            };
+        } else {
+            deleteBtn.classList.add("hidden");
+        }
+    }
+
     await loadSessionRecords(session.sessionId);
     const detailModal = document.getElementById("detail-modal");
     if (detailModal) detailModal.classList.remove("hidden");
@@ -1020,11 +1076,17 @@ let allLoadedLogs = [];
 
 // Get Audit Logs
 async function loadAuditLogs() {
-    const sessionId = activeSession ? activeSession.sessionId : (allSessions.length > 0 ? allSessions[0].sessionId : null);
-    if (!sessionId) return;
-
     try {
-        const res = await fetch(`${BASE_URL}/api/events/session/${sessionId}`, {
+        let url;
+        if (currentUser && currentUser.role === 'ADMIN') {
+            url = `${BASE_URL}/api/events/all`;
+        } else {
+            const sessionId = activeSession ? activeSession.sessionId : (allSessions.length > 0 ? allSessions[0].sessionId : null);
+            if (!sessionId) return;
+            url = `${BASE_URL}/api/events/session/${sessionId}`;
+        }
+
+        const res = await fetch(url, {
             headers: getHeaders()
         });
 

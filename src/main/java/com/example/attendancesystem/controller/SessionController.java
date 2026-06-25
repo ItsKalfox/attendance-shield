@@ -3,6 +3,7 @@ package com.example.attendancesystem.controller;
 import com.example.attendancesystem.dto.CreateSessionRequest;
 import com.example.attendancesystem.dto.SessionResponse;
 import com.example.attendancesystem.model.Role;
+import com.example.attendancesystem.model.SessionStatus;
 import com.example.attendancesystem.security.UserPrincipal;
 import com.example.attendancesystem.service.SessionService;
 import jakarta.validation.Valid;
@@ -82,8 +83,13 @@ public class SessionController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal principal) {
         SessionResponse response = sessionService.getSessionDetails(id);
-        if (principal.getRole() == Role.LECTURER && !response.getLecturerId().equals(principal.getUserId())) {
-            throw new AccessDeniedException("You do not have permission to delete this session");
+        if (principal.getRole() == Role.LECTURER) {
+            if (!response.getLecturerId().equals(principal.getUserId())) {
+                throw new AccessDeniedException("You do not have permission to delete this session");
+            }
+            if (response.getStatus() == SessionStatus.ENDED) {
+                throw new AccessDeniedException("Lecturers cannot delete past sessions");
+            }
         }
         sessionService.deleteSession(id);
         return ResponseEntity.noContent().build();
