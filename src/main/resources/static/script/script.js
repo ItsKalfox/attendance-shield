@@ -801,8 +801,12 @@ function renderDetailChart() {
     const expected = currentDetailSession.expectedStudents || 1;
     const allowHighFlag = document.getElementById("checkbox-allow-high-flag")?.checked;
     const attended = currentSessionRecords.filter(r => {
-        if (!allowHighFlag && r.flagLevel === 'HIGH') return false;
-        return r.status === 'PRESENT' || r.status === 'LATE';
+        if (allowHighFlag) {
+            return r.status === 'PRESENT' || r.status === 'LATE' || r.status === 'REJECTED';
+        } else {
+            if (r.flagLevel === 'HIGH') return false;
+            return r.status === 'PRESENT' || r.status === 'LATE';
+        }
     }).length;
 
     const attendedEl = document.getElementById("attended-count");
@@ -829,11 +833,8 @@ function renderAttendeeList() {
     const flagCheckbox = document.getElementById("checkbox-show-low-med");
     const showLowMed = flagCheckbox ? flagCheckbox.checked : false;
 
-    // Filter records: exclude HIGH flag unless explicitly allowed
-    const visibleRecords = currentSessionRecords.filter(r => {
-        if (!allowHighFlag && r.flagLevel === 'HIGH') return false;
-        return true;
-    });
+    // Show all records regardless of the toggle status
+    const visibleRecords = [...currentSessionRecords];
 
     if (visibleRecords.length === 0) {
         container.innerHTML = `<p style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding: 1rem 0;">No attendees recorded.</p>`;
@@ -849,15 +850,24 @@ function renderAttendeeList() {
             showFlag = true;
         }
 
+        // When toggle is ON, the status of rejected students will temporarily say PRESENT
+        const displayStatus = (allowHighFlag && r.status === 'REJECTED') ? 'PRESENT' : r.status;
+
         const card = document.createElement("div");
         card.className = "attendee-card";
         card.innerHTML = `
             <div class="attendee-main">
                 <div>
                     <div class="attendee-name">${r.studentName}</div>
-                    <div class="attendee-id">ID: ${r.studentId} | status: ${r.status}</div>
+                    <div class="attendee-id">ID: ${r.studentId} | status: ${displayStatus}</div>
                 </div>
-                ${showFlag ? `<span class="flag-icon" onclick="toggleFlagReason(this)">🚩</span>` : ''}
+                ${showFlag ? `
+                    <span class="flag-icon" onclick="toggleFlagReason(this)" title="Click to view flag reason">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 2.25a.75.75 0 01.75.75v.54l1.838-.46a9.75 9.75 0 016.725.738l.108.054A8.25 8.25 0 0018 4.5h.75a.75.75 0 01.75.75v8.25a.75.75 0 01-.75.75H18a9.75 9.75 0 01-6.725-.738l-.108-.054A8.25 8.25 0 005.25 13.5v7.75a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                ` : ''}
             </div>
             ${showFlag ? `
                 <div class="flag-reason-box hidden">
@@ -887,8 +897,12 @@ function exportAttendancePDF() {
 
     const allowHighFlag = document.getElementById("checkbox-allow-high-flag")?.checked;
     const records = currentSessionRecords.filter(r => {
-        if (!allowHighFlag && r.flagLevel === 'HIGH') return false;
-        return r.status === 'PRESENT' || r.status === 'LATE';
+        if (allowHighFlag) {
+            return r.status === 'PRESENT' || r.status === 'LATE' || r.status === 'REJECTED';
+        } else {
+            if (r.flagLevel === 'HIGH') return false;
+            return r.status === 'PRESENT' || r.status === 'LATE';
+        }
     });
 
     const session = currentDetailSession;
